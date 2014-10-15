@@ -5,25 +5,9 @@
 package com.todo.tests;
 
 import com.todo.api.dao.TodoDao;
-import com.todo.api.dao.TodoMongoDbDaoImpl;
 import com.todo.api.dao.model.TodoEntity;
-import com.todo.api.domain.Todo;
-import java.io.IOException;
 import java.util.List;
 
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.client.Invocation.Builder;
-import javax.ws.rs.client.WebTarget;
-import javax.ws.rs.core.GenericType;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-
-import org.codehaus.jackson.JsonGenerationException;
-import org.codehaus.jackson.map.JsonMappingException;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.glassfish.jersey.client.ClientConfig;
-import org.glassfish.jersey.jackson.JacksonFeature;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -31,8 +15,6 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-import org.springframework.test.context.transaction.TransactionConfiguration;
-import org.springframework.transaction.annotation.Transactional;
 
 /**
  *
@@ -49,6 +31,7 @@ public class TodoDaoTest {
 
     @Before
     public void setUp() throws Exception {
+        this.deleteAll();
     }
 
     @Test
@@ -63,7 +46,6 @@ public class TodoDaoTest {
 
     private void deleteAll() {
         int total = todoDao.deleteAll();
-        System.out.println("[deleteAll]["+total+"]");
         List<TodoEntity> items = todoDao.find();
         Assert.assertTrue("Clean TODO table", items.size() == 0);
     }

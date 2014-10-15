@@ -8,6 +8,7 @@ package com.todo.tests.integration;
 //import com.sun.jersey.api.client.WebResource;
 import com.todo.api.dao.TodoDao;
 import com.todo.api.domain.Todo;
+import java.util.List;
 import org.junit.Before;
 
 import javax.ws.rs.core.MediaType;
@@ -16,6 +17,7 @@ import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.Invocation.Builder;
 import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.Response;
 
 import org.codehaus.jackson.map.ObjectMapper;
@@ -37,15 +39,20 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 public class TodoApiCrudIT {
 
     private String BASE_URL = "http://localhost:8080";
+    private String TODO_API_URL;
 
     Client client;
     Todo model;
+    int numCreate; //Numer of documents to create
     
     @Autowired
     TodoDao todoDao;    
 
     @Before
     public void setUp() throws Exception {
+        
+        TODO_API_URL = BASE_URL + "/todo-app/todo";
+        numCreate = 25;
 
         ClientConfig clientConfig = new ClientConfig();
         clientConfig.register(JacksonFeature.class);
@@ -60,16 +67,38 @@ public class TodoApiCrudIT {
     @Test
     public void testTodoCrudOperations() throws Exception {
         
+        testGetAll();
         testPost();     
         testUpdate();
         testDelete();
+
+        //create multiple documents
+        testPostMultiple();
+        testGetAll();
         
     }
+
+    private List<Todo> testGetAll() throws Exception {
+        
+        
+        WebTarget webTarget = client.target(TODO_API_URL);
+
+        Builder request = webTarget.request();
+        request.header("Content-type", MediaType.APPLICATION_JSON);
+
+        Response response = request.get();
+        Assert.assertTrue(response.getStatus() == 200);
+        
+        List<Todo> items  = response.readEntity(new GenericType<List<Todo>>(){});
+        
+        return items;
+    }    
+    
     
     private Todo testPost() throws Exception {
         
         String location = postItem(this.model);
-        Todo found = getItemByLocation(location);
+        Todo found = findByLocation(location);
         
         Assert.assertNotNull(found);
         Assert.assertEquals(this.model.getTitle(), found.getTitle());
@@ -89,7 +118,7 @@ public class TodoApiCrudIT {
         this.model.setDone(true);
         
         updateItem(this.model);
-        Todo found = getItemById(this.model.getId());
+        Todo found = findById(this.model.getId());
         
         Assert.assertNotNull(found);
         Assert.assertEquals(this.model.getTitle(), found.getTitle());
@@ -99,12 +128,12 @@ public class TodoApiCrudIT {
     
     private void testDelete() throws Exception {
         
-        Todo found = getItemById(this.model.getId());
+        Todo found = findById(this.model.getId());
         
         deleteItem(found);
         
         //make sure it doesn't exist anymore
-        WebTarget webTarget = client.target(BASE_URL + "/todo-app/todo/"+found.getId());
+        WebTarget webTarget = client.target(TODO_API_URL + "/"+ found.getId());
 
         Builder request = webTarget.request();
         request.header("Content-type", MediaType.APPLICATION_JSON);
@@ -113,10 +142,20 @@ public class TodoApiCrudIT {
         Assert.assertTrue(response.getStatus() == 404);        
     }
     
+    
+    private void testPostMultiple(){
+        
+        for (int i = 1; i <= this.numCreate; i++){
+            
+            postItem(new Todo("Test Todo #" + 1, "Descripion #" + 1));
+            
+        }
+    }
+    
 
     private String postItem(Todo item) {
         
-        WebTarget webTarget = client.target(BASE_URL + "/todo-app/todo");
+        WebTarget webTarget = client.target(TODO_API_URL);
 
         Builder request = webTarget.request();
         request.header("Content-type", MediaType.APPLICATION_JSON);
@@ -131,7 +170,7 @@ public class TodoApiCrudIT {
     
     private void updateItem(Todo item) {
         
-        WebTarget webTarget = client.target(BASE_URL + "/todo-app/todo/"+item.getId());
+        WebTarget webTarget = client.target(TODO_API_URL + "/" + item.getId());
 
         Builder request = webTarget.request();
         request.header("Content-type", MediaType.APPLICATION_JSON);
@@ -143,7 +182,7 @@ public class TodoApiCrudIT {
     
     private void deleteItem(Todo item) {
         
-        WebTarget webTarget = client.target(BASE_URL + "/todo-app/todo/"+item.getId());
+        WebTarget webTarget = client.target(TODO_API_URL + "/"+item.getId());
 
         Builder request = webTarget.request();
         request.header("Content-type", MediaType.APPLICATION_JSON);
@@ -154,13 +193,13 @@ public class TodoApiCrudIT {
     }    
     
     
-    private Todo getItemById(String id) throws Exception {
+    private Todo findById(String id) throws Exception {
     
-        return getItemByLocation(BASE_URL + "/todo-app/todo/" + id);
+        return findByLocation(TODO_API_URL + "/" + id);
     }
     
 
-    private Todo getItemByLocation(String location) throws Exception {
+    private Todo findByLocation(String location) throws Exception {
 
         WebTarget webTarget = client.target(location);
 
@@ -180,7 +219,7 @@ public class TodoApiCrudIT {
     }
 
 
+
     
-    
-    
+        
 }

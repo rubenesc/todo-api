@@ -7,10 +7,7 @@ package com.todo.api.resource;
 import com.todo.api.domain.Todo;
 import com.todo.api.exceptions.AppException;
 import com.todo.api.service.TodoService;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -92,7 +89,7 @@ public class TodoResource {
 
         }
     }
-
+    
     @DELETE
     @Path("{id}")
     @Produces({MediaType.TEXT_HTML})
