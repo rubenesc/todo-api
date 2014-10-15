@@ -2,7 +2,10 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package com.todo.domain;
+package com.todo.api.domain;
+
+import com.todo.api.dao.model.TodoEntity;
+import org.apache.commons.beanutils.BeanUtils;
 
 /**
  *
@@ -10,6 +13,7 @@ package com.todo.domain;
  */
 public class Todo {
     
+    private String id;
     private String title;
     private String description;
     private Boolean done = false;
@@ -20,7 +24,7 @@ public class Todo {
     public Todo(String title) {
         this.title = title;
     }
-    
+
     public Todo(String title, String description) {
         this.title = title;
         this.description = description;
@@ -30,6 +34,18 @@ public class Todo {
         this.title = title;
         this.description = description;
         this.done = done;
+    }
+
+    public Todo(TodoEntity entity) throws Exception {
+        BeanUtils.copyProperties(this, entity);
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
     }
 
     public String getTitle() {
@@ -55,5 +71,4 @@ public class Todo {
     public void setDone(Boolean done) {
         this.done = done;
     }
-    
 }

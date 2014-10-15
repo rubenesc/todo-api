@@ -3,8 +3,9 @@
 target/
 
 
-#netbeans ignore personal stuff 
+#ignore personal stuff 
 nbproject/private/
+nb-configuration.xml
 
 ## generic files to ignore
 *~
