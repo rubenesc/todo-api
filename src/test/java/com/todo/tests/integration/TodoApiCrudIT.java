@@ -6,14 +6,11 @@ package com.todo.tests.integration;
 
 //import com.sun.jersey.api.client.ClientResponse;
 //import com.sun.jersey.api.client.WebResource;
-import com.google.gson.Gson;
+import com.todo.api.dao.TodoDao;
 import com.todo.api.domain.Todo;
-import org.junit.After;
 import org.junit.Before;
-import org.junit.Test;
 
 import javax.ws.rs.core.MediaType;
-import java.io.IOException;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
@@ -21,15 +18,13 @@ import javax.ws.rs.client.Invocation.Builder;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Response;
 
-import static junit.framework.Assert.assertEquals;
-import static junit.framework.Assert.assertTrue;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.glassfish.jersey.client.ClientConfig;
-import org.glassfish.jersey.client.ClientResponse;
 import org.glassfish.jersey.jackson.JacksonFeature;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
@@ -45,6 +40,9 @@ public class TodoApiCrudIT {
 
     Client client;
     Todo model;
+    
+    @Autowired
+    TodoDao todoDao;    
 
     @Before
     public void setUp() throws Exception {
@@ -55,6 +53,8 @@ public class TodoApiCrudIT {
         client = ClientBuilder.newClient(clientConfig);
         
         model = new Todo("Test API", "Test Todo API methods: POST, PUT, GET, DELETE");
+        
+        todoDao.deleteAll();        
     }
 
     @Test
@@ -62,7 +62,7 @@ public class TodoApiCrudIT {
         
         testPost();     
         testUpdate();
-        
+        testDelete();
         
     }
     
@@ -95,7 +95,24 @@ public class TodoApiCrudIT {
         Assert.assertEquals(this.model.getTitle(), found.getTitle());
         Assert.assertEquals(this.model.getDescription(), found.getDescription());
         Assert.assertEquals(this.model.getDone(), found.getDone());
-    }        
+    }     
+    
+    private void testDelete() throws Exception {
+        
+        Todo found = getItemById(this.model.getId());
+        
+        deleteItem(found);
+        
+        //make sure it doesn't exist anymore
+        WebTarget webTarget = client.target(BASE_URL + "/todo-app/todo/"+found.getId());
+
+        Builder request = webTarget.request();
+        request.header("Content-type", MediaType.APPLICATION_JSON);
+
+        Response response = request.get();
+        Assert.assertTrue(response.getStatus() == 404);        
+    }
+    
 
     private String postItem(Todo item) {
         
@@ -114,7 +131,6 @@ public class TodoApiCrudIT {
     
     private void updateItem(Todo item) {
         
-        System.out.println("zzz" + BASE_URL + "/todo-app/todo/"+item.getId());
         WebTarget webTarget = client.target(BASE_URL + "/todo-app/todo/"+item.getId());
 
         Builder request = webTarget.request();
@@ -125,9 +141,22 @@ public class TodoApiCrudIT {
         
     }    
     
+    private void deleteItem(Todo item) {
+        
+        WebTarget webTarget = client.target(BASE_URL + "/todo-app/todo/"+item.getId());
+
+        Builder request = webTarget.request();
+        request.header("Content-type", MediaType.APPLICATION_JSON);
+        
+        Response response = request.delete();
+        Assert.assertTrue(response.getStatus() == 204);
+        
+    }    
+    
+    
     private Todo getItemById(String id) throws Exception {
     
-        return getItemByLocation(BASE_URL + "/todo-app/todo" + id);
+        return getItemByLocation(BASE_URL + "/todo-app/todo/" + id);
     }
     
 

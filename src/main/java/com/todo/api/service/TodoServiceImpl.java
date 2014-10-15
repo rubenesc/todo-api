@@ -29,7 +29,7 @@ public class TodoServiceImpl implements TodoService {
         validateInputForCreation(model);
 
         TodoEntity entity = new TodoEntity(model);
-        
+
         //persist data
         todoDao.create(entity);
 
@@ -62,11 +62,21 @@ public class TodoServiceImpl implements TodoService {
     }
 
     public void update(Todo item) throws Exception {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        
+        validateInputForUpdate(item);
+        
+        TodoEntity entity = todoDao.find(item.getId());
+        
+        updateAttributes(entity, item);
+        
+        todoDao.update(entity);
+        
     }
 
     public void delete(String id) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        
+        todoDao.delete(id);
+        
     }
 
     public void setTodoDao(TodoDao todoDao) {
@@ -79,9 +89,18 @@ public class TodoServiceImpl implements TodoService {
         if (StringUtils.isEmpty(model.getTitle())) {
             throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(), 400, "Insufficiente Data, title required");
         }
-        
-    }
 
+    }
+    
+    //validation
+    private void validateInputForUpdate(Todo model) throws AppException {
+
+        if (StringUtils.isEmpty(model.getTitle())) {
+            throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(), 400, "Insufficiente Data, title required");
+        }
+
+    }
+    
     //Helper Methods
     private List<Todo> getTodosFromEntities(List<TodoEntity> entities) throws Exception {
         List<Todo> response = new ArrayList<Todo>();
@@ -90,5 +109,11 @@ public class TodoServiceImpl implements TodoService {
         }
 
         return response;
+    }
+
+    private void updateAttributes(TodoEntity entity, Todo model) {
+        entity.setTitle(model.getTitle());
+        entity.setDescription(model.getDescription());
+        entity.setDone(model.getDone());
     }
 }
