@@ -4,6 +4,7 @@
  */
 package com.todo.api.resource;
 
+import com.todo.api.resource.ext.PATCH;
 import com.todo.api.domain.Todo;
 import com.todo.api.exceptions.AppException;
 import com.todo.api.service.TodoService;
@@ -26,7 +27,7 @@ import org.springframework.beans.factory.annotation.Autowired;
  */
 @Path("/todo")
 public class TodoResource {
-
+   
     @Autowired
     private TodoService todoService;
 
@@ -65,7 +66,7 @@ public class TodoResource {
     @Path("{id}")
     @Consumes({MediaType.APPLICATION_JSON})
     @Produces({MediaType.TEXT_HTML})
-    public Response putPodcastById(@PathParam("id") String id, Todo model)
+    public Response putItem(@PathParam("id") String id, Todo model)
             throws AppException, Exception {
 
         Todo found = todoService.find(id);
@@ -90,10 +91,40 @@ public class TodoResource {
         }
     }
     
+    
+    @PATCH
+    @Path("{id}")
+    @Consumes({MediaType.APPLICATION_JSON})
+    @Produces({MediaType.TEXT_HTML})
+    public Response patchItem(@PathParam("id") String id, Todo model)
+            throws AppException, Exception {
+        
+        Todo found = todoService.find(id);
+
+        if (found == null) {
+
+            String newId = todoService.create(model);
+            // 201
+            return Response.status(Response.Status.CREATED)
+                    .entity("created")
+                    .header("Location", "/todo-app/todo/" + newId).build();
+
+        } else {
+
+            model.setId(id);
+            todoService.patch(model);
+            // 200
+            return Response.status(Response.Status.OK)
+                    .entity("patched")
+                    .header("Location", "/todo-app/todo/" + id).build();
+
+        }
+    }    
+
     @DELETE
     @Path("{id}")
     @Produces({MediaType.TEXT_HTML})
-    public Response deletePodcastById(@PathParam("id") String id) {
+    public Response deleteItem(@PathParam("id") String id) {
 
         todoService.delete(id);
         // 204

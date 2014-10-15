@@ -25,6 +25,9 @@ public interface TodoService {
     //update
     public void update(Todo item) throws Exception;
     
+    //patch
+    public void patch(Todo item) throws Exception;
+    
     //delete
     public void delete(String id);
 

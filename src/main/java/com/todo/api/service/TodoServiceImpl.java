@@ -53,8 +53,7 @@ public class TodoServiceImpl implements TodoService {
 
         if (entity == null) {
             throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
-                    404,
-                    "The item you requested with id " + id + " was not found.");
+                    404, "The item you requested with id " + id + " was not found.");
         }
 
         return new Todo(entity);
@@ -72,6 +71,18 @@ public class TodoServiceImpl implements TodoService {
         todoDao.update(entity);
         
     }
+    
+    public void patch(Todo item) throws Exception {
+        
+        TodoEntity entity = todoDao.find(item.getId());
+        
+        patchAttributes(entity, item);
+        
+        validateInputForPatch(entity);
+        
+        todoDao.update(entity);
+        
+    }    
 
     public void delete(String id) {
         
@@ -92,7 +103,6 @@ public class TodoServiceImpl implements TodoService {
 
     }
     
-    //validation
     private void validateInputForUpdate(Todo model) throws AppException {
 
         if (StringUtils.isEmpty(model.getTitle())) {
@@ -100,6 +110,14 @@ public class TodoServiceImpl implements TodoService {
         }
 
     }
+    
+    private void validateInputForPatch(TodoEntity entity) throws AppException {
+
+        if (StringUtils.isEmpty(entity.getTitle())) {
+            throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(), 400, "Insufficiente Data, title required");
+        }
+
+    }    
     
     //Helper Methods
     private List<Todo> getTodosFromEntities(List<TodoEntity> entities) throws Exception {
@@ -115,5 +133,24 @@ public class TodoServiceImpl implements TodoService {
         entity.setTitle(model.getTitle());
         entity.setDescription(model.getDescription());
         entity.setDone(model.getDone());
+    }
+    
+    /*
+     * update attributes that are not empty
+     */
+    private void patchAttributes(TodoEntity entity, Todo model) {
+        
+        if (!StringUtils.isEmpty(model.getTitle())){
+            entity.setTitle(model.getTitle());
+        }
+        
+        if (!StringUtils.isEmpty(model.getDescription())){
+            entity.setDescription(model.getDescription());
+        }
+        
+        if (!StringUtils.isEmpty(model.getDone())){
+            entity.setDone(model.getDone());
+        }
+        
     }
 }
