@@ -31,6 +31,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 import java.util.logging.Level;
+import javax.annotation.PreDestroy;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.PropertySource;
 
@@ -44,7 +45,8 @@ public class SearchService {
 
     final static Logger logger = LoggerFactory.getLogger(SearchService.class);
     private JestClient jestClient;
-    public String url; 
+    private String url;
+    private Integer timeout;
     private String INDEX_TODOS = "todos";
     private String TYPE_TODO = "todo";
 
@@ -208,9 +210,9 @@ public class SearchService {
     }
 
     public List<TodoEntity> searchTodos(String param) {
-        
+
         verifyClient();
-        
+
         try {
 
             SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
@@ -246,29 +248,52 @@ public class SearchService {
         } else {
             // generic, check your dashboard
             connectionUrl = url;
-            
         }
+        
+        logger.debug("jest client url: " + connectionUrl);
 
+        
+        if (this.timeout == null){
+            this.timeout = 5000;
+        }
+        
         // Configuration
         JestClientFactory factory = new JestClientFactory();
         factory.setHttpClientConfig(new HttpClientConfig.Builder(connectionUrl)
-                .multiThreaded(true)
+                .multiThreaded(true).readTimeout(this.timeout)
                 .build());
         return factory.getObject();
     }
 
-    private void verifyClient(){
-        
+    private void verifyClient() {
+
         if (this.jestClient == null) {
             try {
+                System.out.println("creating jest clientt!!!!");
+                System.out.println("creating jest clientt!!!!");
+                System.out.println("creating jest clientt!!!!");
+                System.out.println("creating jest clientt!!!!");
+                System.out.println("creating jest clientt!!!!");
                 this.jestClient = jestClient();
-            } catch (Exception ex) {
-                java.util.logging.Logger.getLogger(SearchService.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (Exception e) {
+                logger.error(e.getMessage(), e);
             }
         }
-    
+
     }
-    
+
+    @PreDestroy
+    public void cleanUp() throws Exception {
+        System.out.println("Spring Container is destroy! Customer clean up");
+        System.out.println("Spring Container is destroy! Customer clean up");
+        System.out.println("Spring Container is destroy! Customer clean up");
+        System.out.println("Spring Container is destroy! Customer clean up");
+        System.out.println("Spring Container is destroy! Customer clean up");
+        if (this.jestClient != null) {
+            this.jestClient.shutdownClient();
+        }
+    }
+
     public String getUrl() {
         return url;
     }
@@ -276,7 +301,14 @@ public class SearchService {
     public void setUrl(String url) {
         this.url = url;
     }
-    
+
+    public Integer getTimeout() {
+        return timeout;
+    }
+
+    public void setTimeout(Integer timeout) {
+        this.timeout = timeout;
+    }
     
     
 }

@@ -83,6 +83,31 @@ public class TodoApiCrudIT {
         testPostMultiple();
         testGetAll();
 
+        //test search
+        testSearch();
+
+    }
+
+    private List<Todo> testSearch() throws Exception {
+        
+        String query = "2";
+        WebTarget webTarget = client.target(TODO_API_URL + "/search?q=" + query);
+
+        Builder request = webTarget.request();
+        request.header("Content-type", MediaType.APPLICATION_JSON);
+
+        Response response = request.get();
+        Assert.assertTrue(response.getStatus() == 200);
+
+        List<Todo> items = response.readEntity(new GenericType<List<Todo>>() {
+        });
+        
+        System.out.println("testSearch results ["+items.size()+"]");
+        for (Todo item : items) {
+            System.out.println(item);
+        }
+        
+        return items;
     }
 
     private List<Todo> testGetAll() throws Exception {
@@ -169,7 +194,7 @@ public class TodoApiCrudIT {
 
         for (int i = 1; i <= this.numCreate; i++) {
 
-            postItem(new Todo("Test Todo #" + 1, "Descripion #" + 1));
+            postItem(new Todo("Test Todo #" + i, "Todo Description #" + i));
 
         }
     }
@@ -200,28 +225,26 @@ public class TodoApiCrudIT {
         Assert.assertTrue(response.getStatus() == 200);
 
     }
-    
-    
+
     /**
-     * Partial update with PATCH method.
-     * Used Apache httpClient instead of jersey, due to lack of support
-     * of PATCH method.
-     * 
-     * @throws Exception 
+     * Partial update with PATCH method. Used Apache httpClient instead of
+     * jersey, due to lack of support of PATCH method.
+     *
+     * @throws Exception
      */
     public void patchItem(Todo item) throws Exception {
-        
-            HttpClient httpClient = new DefaultHttpClient();
-            HttpPatch httpPatch = new HttpPatch(TODO_API_URL + "/" + item.getId());
 
-            Gson gson = new Gson();
-            StringEntity entity = new StringEntity(gson.toJson(item));
-            entity.setContentType(MediaType.APPLICATION_JSON);
-            
-            httpPatch.setEntity(entity);
-            HttpResponse response = httpClient.execute(httpPatch);
-            
-            Assert.assertTrue(response.getStatusLine().getStatusCode() == 200);
+        HttpClient httpClient = new DefaultHttpClient();
+        HttpPatch httpPatch = new HttpPatch(TODO_API_URL + "/" + item.getId());
+
+        Gson gson = new Gson();
+        StringEntity entity = new StringEntity(gson.toJson(item));
+        entity.setContentType(MediaType.APPLICATION_JSON);
+
+        httpPatch.setEntity(entity);
+        HttpResponse response = httpClient.execute(httpPatch);
+
+        Assert.assertTrue(response.getStatusLine().getStatusCode() == 200);
     }
 
     private void deleteItem(Todo item) {

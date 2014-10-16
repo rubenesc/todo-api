@@ -10,7 +10,10 @@ import com.todo.api.domain.Todo;
 import com.todo.api.exceptions.AppException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.ws.rs.core.Response;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.StringUtils;
 
@@ -20,6 +23,8 @@ import org.springframework.util.StringUtils;
  */
 public class TodoServiceImpl implements TodoService {
 
+    final static org.slf4j.Logger logger = LoggerFactory.getLogger(TodoServiceImpl.class);
+    
     @Autowired
     TodoDao todoDao;
     
@@ -47,9 +52,9 @@ public class TodoServiceImpl implements TodoService {
 
     public List<Todo> find() throws Exception {
         
-        List<TodoEntity> get = todoDao.find();
-        List<Todo> todosFromEntities = getTodosFromEntities(get);
-        return todosFromEntities;
+        List<TodoEntity> entities = todoDao.find();
+        List<Todo> models = convertEntitiesToModels(entities);
+        return models;
         
     }
 
@@ -98,8 +103,18 @@ public class TodoServiceImpl implements TodoService {
         //delete index
         searchService.deleteDocument(id);
         
-        
     }
+    
+    
+
+    public List<Todo> search(String query) throws Exception {
+        
+            List<TodoEntity> entities = searchService.searchTodos(query);
+
+            List<Todo> models = convertEntitiesToModels(entities);
+            return models;
+        
+    }    
     
     
     //Spring DI 
@@ -133,7 +148,7 @@ public class TodoServiceImpl implements TodoService {
     }    
     
     //Helper Methods
-    private List<Todo> getTodosFromEntities(List<TodoEntity> entities) throws Exception {
+    private List<Todo> convertEntitiesToModels(List<TodoEntity> entities) throws Exception {
         List<Todo> response = new ArrayList<Todo>();
         for (TodoEntity entity : entities) {
             response.add(new Todo(entity));

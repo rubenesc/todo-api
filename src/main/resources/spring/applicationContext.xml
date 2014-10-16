@@ -51,6 +51,7 @@
     
     <bean id="searchService" class="com.todo.api.service.SearchService" >
         <property name="url" value="${es.url}"/> 
+        <property name="timeout" value="${es.timeout}"/> 
     </bean>       
         
 </beans>

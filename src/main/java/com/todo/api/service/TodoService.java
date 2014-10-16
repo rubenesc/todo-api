@@ -31,5 +31,6 @@ public interface TodoService {
     //delete
     public void delete(String id);
 
+    public List<Todo> search(String query) throws Exception;
 
 }
