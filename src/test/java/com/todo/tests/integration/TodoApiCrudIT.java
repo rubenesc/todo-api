@@ -9,6 +9,7 @@ package com.todo.tests.integration;
 import com.google.gson.Gson;
 import com.todo.api.dao.TodoDao;
 import com.todo.api.domain.Todo;
+import com.todo.api.filters.AppConst;
 import java.io.UnsupportedEncodingException;
 import java.util.List;
 import org.junit.Before;
@@ -56,7 +57,7 @@ public class TodoApiCrudIT {
     @Before
     public void setUp() throws Exception {
 
-        TODO_API_URL = BASE_URL + "/todo-app/todo";
+        TODO_API_URL = BASE_URL + AppConst.TODO_PATH;
         numCreate = 25;
 
         ClientConfig clientConfig = new ClientConfig();

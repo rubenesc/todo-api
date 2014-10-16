@@ -8,7 +8,6 @@ import com.todo.api.dao.TodoDao;
 import com.todo.api.dao.model.TodoEntity;
 import com.todo.api.domain.Todo;
 import com.todo.api.exceptions.AppException;
-import com.todo.api.filters.AppConstants;
 import java.util.ArrayList;
 import java.util.List;
 import javax.ws.rs.core.Response;
@@ -23,6 +22,9 @@ public class TodoServiceImpl implements TodoService {
 
     @Autowired
     TodoDao todoDao;
+    
+    @Autowired
+    SearchService searchService;    
 
     public String create(Todo model) throws Exception {
 
@@ -32,7 +34,10 @@ public class TodoServiceImpl implements TodoService {
 
         //persist data
         todoDao.create(entity);
-
+        
+        //index data
+        searchService.index(entity);
+        
         return entity.getId();
     }
 
@@ -41,10 +46,11 @@ public class TodoServiceImpl implements TodoService {
     }
 
     public List<Todo> find() throws Exception {
-
+        
         List<TodoEntity> get = todoDao.find();
         List<Todo> todosFromEntities = getTodosFromEntities(get);
         return todosFromEntities;
+        
     }
 
     public Todo find(String id) throws Exception {
@@ -86,10 +92,17 @@ public class TodoServiceImpl implements TodoService {
 
     public void delete(String id) {
         
+        //delete from DB
         todoDao.delete(id);
         
+        //delete index
+        searchService.deleteDocument(id);
+        
+        
     }
-
+    
+    
+    //Spring DI 
     public void setTodoDao(TodoDao todoDao) {
         this.todoDao = todoDao;
     }

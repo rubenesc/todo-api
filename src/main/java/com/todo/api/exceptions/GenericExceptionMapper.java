@@ -1,6 +1,6 @@
 package com.todo.api.exceptions;
 
-import com.todo.api.filters.AppConstants;
+import com.todo.api.filters.AppConst;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 
@@ -15,7 +15,7 @@ public class GenericExceptionMapper implements ExceptionMapper<Throwable> {
 
         ErrorMessage errorMessage = new ErrorMessage();
         setHttpStatus(ex, errorMessage);
-        errorMessage.setCode(AppConstants.GENERIC_APP_ERROR_CODE);
+        errorMessage.setCode(AppConst.GENERIC_APP_ERROR_CODE);
         errorMessage.setMessage(ex.getMessage());
         StringWriter errorStackTrace = new StringWriter();
         ex.printStackTrace(new PrintWriter(errorStackTrace));

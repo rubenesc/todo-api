@@ -48,4 +48,8 @@
     	<property name="todoDao" ref="todoDao"/>
     </bean>       
     
+    <bean id="searchService" class="com.todo.api.service.SearchService" >
+        <property name="url" value="${es.url}"/> 
+    </bean>       
+
 </beans>

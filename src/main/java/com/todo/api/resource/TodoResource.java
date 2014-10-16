@@ -7,6 +7,7 @@ package com.todo.api.resource;
 import com.todo.api.resource.ext.PATCH;
 import com.todo.api.domain.Todo;
 import com.todo.api.exceptions.AppException;
+import com.todo.api.filters.AppConst;
 import com.todo.api.service.TodoService;
 import java.util.List;
 import javax.ws.rs.Consumes;
@@ -25,12 +26,12 @@ import org.springframework.beans.factory.annotation.Autowired;
  *
  * @author ruben
  */
-@Path("/todo")
+@Path("/v1/todo")
 public class TodoResource {
    
     @Autowired
     private TodoService todoService;
-
+    
     @POST
     @Consumes({MediaType.APPLICATION_JSON})
     @Produces({MediaType.TEXT_HTML})
@@ -40,7 +41,7 @@ public class TodoResource {
         // 201
         return Response.status(Response.Status.CREATED)
                 .entity("created")
-                .header("Location", "/todo-app/todo/" + id).build();
+                .header("Location", AppConst.TODO_PATH + "/" + id).build();
     }
 
     @GET
@@ -77,7 +78,7 @@ public class TodoResource {
             // 201
             return Response.status(Response.Status.CREATED)
                     .entity("created")
-                    .header("Location", "/todo-app/todo/" + newId).build();
+                    .header("Location", AppConst.TODO_PATH + "/" + newId).build();
 
         } else {
 
@@ -86,7 +87,7 @@ public class TodoResource {
             // 200
             return Response.status(Response.Status.OK)
                     .entity("updated")
-                    .header("Location", "/todo-app/todo/" + id).build();
+                    .header("Location", AppConst.TODO_PATH + "/" + id).build();
 
         }
     }
@@ -107,7 +108,7 @@ public class TodoResource {
             // 201
             return Response.status(Response.Status.CREATED)
                     .entity("created")
-                    .header("Location", "/todo-app/todo/" + newId).build();
+                    .header("Location", AppConst.TODO_PATH + "/" + newId).build();
 
         } else {
 
@@ -116,7 +117,7 @@ public class TodoResource {
             // 200
             return Response.status(Response.Status.OK)
                     .entity("patched")
-                    .header("Location", "/todo-app/todo/" + id).build();
+                    .header("Location", AppConst.TODO_PATH + "/" + id).build();
 
         }
     }    
