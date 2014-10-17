@@ -26,14 +26,9 @@ import io.searchbox.indices.DeleteIndex;
 import io.searchbox.indices.IndicesExists;
 import java.util.ArrayList;
 
-
-//
 import java.util.List;
-import java.util.Properties;
-import java.util.logging.Level;
+import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.PropertySource;
 
 /**
  * /**
@@ -44,23 +39,24 @@ import org.springframework.context.annotation.PropertySource;
 public class SearchService {
 
     final static Logger logger = LoggerFactory.getLogger(SearchService.class);
-    private JestClient jestClient;
-    private String url;
-    private Integer timeout;
-    private String INDEX_TODOS = "todos";
-    private String TYPE_TODO = "todo";
+    private static JestClient jestClient;
+    private static String url;
+    private static Integer timeout;
+    private static String INDEX_TODOS = "todos";
+    private static String TYPE_TODO = "todo";
+
+    @PostConstruct
+    public void initialize() throws Exception {
+        initClient();
+        createIndex();
+    }
 
     public boolean deleteIndex() {
-
-        verifyClient();
-
+        
         try {
-
             // Delete index if it is exists
             DeleteIndex deleteIndex = new DeleteIndex.Builder(INDEX_TODOS).build();
-
             JestResult result = jestClient.execute(deleteIndex);
-
             return result.isSucceeded();
 
         } catch (Exception e) {
@@ -68,28 +64,34 @@ public class SearchService {
         }
 
         return false;
-
     }
+    
+    /**
+     * Create Todos Index if it does not exist
+     *
+     * @throws Exception
+     */
+    public void createIndex() throws Exception {
+        
+        IndicesExists indicesExists = new IndicesExists.Builder(INDEX_TODOS).build();
+        JestResult result = jestClient.execute(indicesExists);
+
+        if (!result.isSucceeded()) {
+            // Create todos index
+            CreateIndex createIndex = new CreateIndex.Builder(INDEX_TODOS).build();
+            jestClient.execute(createIndex);
+        }
+    }
+    
 
     public boolean index(TodoEntity item) throws Exception {
 
-        verifyClient();
-
         try {
-
-            IndicesExists indicesExists = new IndicesExists.Builder(INDEX_TODOS).build();
-            JestResult result = jestClient.execute(indicesExists);
-
-            if (!result.isSucceeded()) {
-                // Create todos index
-                CreateIndex createIndex = new CreateIndex.Builder(INDEX_TODOS).build();
-                jestClient.execute(createIndex);
-            }
 
             Index index = new Index.Builder(item).index(INDEX_TODOS)
                     .type(TYPE_TODO).id(item.getId()).build();
 
-            result = jestClient.execute(index);
+            JestResult result = jestClient.execute(index);
 
             logger.debug("index result: " + result.getJsonString());
 
@@ -104,18 +106,8 @@ public class SearchService {
     }
 
     public boolean index(List<TodoEntity> items) throws Exception {
-        verifyClient();
 
         try {
-
-            IndicesExists indicesExists = new IndicesExists.Builder(INDEX_TODOS).build();
-            JestResult result = jestClient.execute(indicesExists);
-
-            if (!result.isSucceeded()) {
-                // Create todos index
-                CreateIndex createIndex = new CreateIndex.Builder(INDEX_TODOS).build();
-                jestClient.execute(createIndex);
-            }
 
             Bulk.Builder builder = new Bulk.Builder();
             for (TodoEntity item : items) {
@@ -123,7 +115,7 @@ public class SearchService {
             }
             Bulk bulk = builder.build();
 
-            result = jestClient.execute(bulk);
+            JestResult result = jestClient.execute(bulk);
 
             return result.isSucceeded();
 
@@ -135,8 +127,6 @@ public class SearchService {
     }
 
     public TodoEntity findDocument(String id) {
-
-        verifyClient();
 
         TodoEntity entity = null;
 
@@ -154,9 +144,6 @@ public class SearchService {
     }
 
     public boolean updateDocument(TodoEntity entity) throws Exception {
-
-        verifyClient();
-
 
 //"script" : "ctx._source.name_of_new_field = \"value_of_new_field\""   
 //
@@ -188,8 +175,6 @@ public class SearchService {
 
     public boolean deleteDocument(String id) {
 
-        verifyClient();
-
         try {
 
             Delete delete = new Delete.Builder(id)
@@ -210,8 +195,6 @@ public class SearchService {
     }
 
     public List<TodoEntity> searchTodos(String param) {
-
-        verifyClient();
 
         try {
 
@@ -249,66 +232,60 @@ public class SearchService {
             // generic, check your dashboard
             connectionUrl = url;
         }
-        
+
         logger.debug("jest client url: " + connectionUrl);
 
-        
-        if (this.timeout == null){
-            this.timeout = 5000;
+        if (timeout == null) {
+            timeout = 5000;
         }
-        
+
         // Configuration
         JestClientFactory factory = new JestClientFactory();
         factory.setHttpClientConfig(new HttpClientConfig.Builder(connectionUrl)
-                .multiThreaded(true).readTimeout(this.timeout)
+                .multiThreaded(true).readTimeout(timeout)
                 .build());
         return factory.getObject();
     }
 
-    private void verifyClient() {
+    @PreDestroy
+    public void cleanUp() throws Exception {
+        releaseClient();
+    }
 
-        if (this.jestClient == null) {
+    public void setUrl(String u) {
+        url = u;
+    }
+
+    public void setTimeout(Integer t) {
+        timeout = t;
+    }
+
+    /**
+     * Initialize Jest Client
+     */
+    private void initClient() {
+        if (jestClient == null) {
             try {
-                System.out.println("creating jest clientt!!!!");
-                System.out.println("creating jest clientt!!!!");
-                System.out.println("creating jest clientt!!!!");
-                System.out.println("creating jest clientt!!!!");
-                System.out.println("creating jest clientt!!!!");
-                this.jestClient = jestClient();
+                jestClient = jestClient();
             } catch (Exception e) {
                 logger.error(e.getMessage(), e);
             }
         }
-
     }
+    
+    /**
+     * Release client connections
+     */
+    private void releaseClient() {
+        if (jestClient != null) {
 
-    @PreDestroy
-    public void cleanUp() throws Exception {
-        System.out.println("Spring Container is destroy! Customer clean up");
-        System.out.println("Spring Container is destroy! Customer clean up");
-        System.out.println("Spring Container is destroy! Customer clean up");
-        System.out.println("Spring Container is destroy! Customer clean up");
-        System.out.println("Spring Container is destroy! Customer clean up");
-        if (this.jestClient != null) {
-            this.jestClient.shutdownClient();
+            try {
+                jestClient.shutdownClient();
+            } catch (Exception e) {
+                logger.error(e.getMessage(), e);
+            }
+
         }
-    }
+    }    
 
-    public String getUrl() {
-        return url;
-    }
-
-    public void setUrl(String url) {
-        this.url = url;
-    }
-
-    public Integer getTimeout() {
-        return timeout;
-    }
-
-    public void setTimeout(Integer timeout) {
-        this.timeout = timeout;
-    }
-    
-    
 }

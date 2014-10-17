@@ -124,7 +124,7 @@ public class TodoResource {
         } else {
 
             model.setId(id);
-            todoService.patch(model);
+            todoService.partialUpdate(model);
             // 200
             return Response.status(Response.Status.OK)
                     .entity("patched")

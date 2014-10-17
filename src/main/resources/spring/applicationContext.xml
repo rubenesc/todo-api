@@ -24,7 +24,7 @@
     <context:component-scan base-package="com.todo.api.*" />
 
     <!-- Configurer that replaces ${...} placeholders with values from a properties file -->
-    <context:property-placeholder location="classpath:db.properties"/>
+    <context:property-placeholder location="classpath:config.properties"/>
 
     <!-- Mongo DB -->
     <mongo:mongo host="${db.host}" port="${db.port}" id="mongo" />
@@ -45,7 +45,7 @@
     	<property name="todoService" ref="todoService"/>
     </bean>
     
-    <bean id="todoService" class="com.todo.api.service.TodoServiceImpl" >
+    <bean id="todoService" class="com.todo.api.service.TodoService" >
     	<property name="todoDao" ref="todoDao"/>
     </bean>       
     
@@ -53,5 +53,12 @@
         <property name="url" value="${es.url}"/> 
         <property name="timeout" value="${es.timeout}"/> 
     </bean>       
-        
+    
+    <bean id="smsService" class="com.todo.api.service.SmsService" >
+        <property name="accountSid" value="${twilio.accountSid}"/> 
+        <property name="authToken" value="${twilio.authToken}"/> 
+        <property name="defaultTo" value="${twilio.defaultTo}"/> 
+        <property name="defaultFrom" value="${twilio.defaultFrom}"/> 
+    </bean>       
+    
 </beans>

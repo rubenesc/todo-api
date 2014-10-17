@@ -37,11 +37,11 @@ public class SearchServiceTest {
     public void setUp() throws Exception {
         this.cleanTodoDB();
         searchService.deleteIndex();
+        searchService.createIndex();
     }
     
     @After
-    public void clean() throws Exception {
-//        searchService.deleteTodosIndex();
+    public void cleanUp() throws Exception {
     }
     
 

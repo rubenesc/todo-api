@@ -23,7 +23,6 @@ import org.springframework.test.context.support.AnnotationConfigContextLoader;
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration({"classpath:test-applicationContext.xml"})
-//@ContextConfiguration(classes= SpringConfiguration.class, locations = { "classpath:applicationContext.xml", "classpath:test-applicationContext.xml" }) 
 public class TodoDaoTest {
 
     @Autowired
