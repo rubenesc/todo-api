@@ -8,6 +8,7 @@ import com.todo.api.resource.ext.PATCH;
 import com.todo.api.domain.Todo;
 import com.todo.api.exceptions.AppException;
 import com.todo.api.filters.AppConst;
+import com.todo.api.service.SearchService;
 import com.todo.api.service.TodoService;
 import java.util.List;
 import javax.ws.rs.Consumes;
@@ -21,6 +22,8 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
@@ -29,6 +32,8 @@ import org.springframework.beans.factory.annotation.Autowired;
  */
 @Path("/v1/todo")
 public class TodoResource {
+    
+    final static Logger logger = LoggerFactory.getLogger(TodoResource.class);
 
     @Autowired
     private TodoService todoService;
@@ -37,7 +42,7 @@ public class TodoResource {
     @Consumes({MediaType.APPLICATION_JSON})
     @Produces({MediaType.TEXT_HTML})
     public Response create(Todo model) throws Exception {
-
+        
         String id = todoService.create(model);
         // 201
         return Response.status(Response.Status.CREATED)
@@ -48,7 +53,7 @@ public class TodoResource {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public List<Todo> getItems() throws Exception {
-
+        
         List<Todo> items = todoService.find();
         return items;
 
