@@ -29,10 +29,10 @@ import org.springframework.beans.factory.annotation.Autowired;
  */
 @Path("/v1/todo")
 public class TodoResource {
-   
+
     @Autowired
     private TodoService todoService;
-    
+
     @POST
     @Consumes({MediaType.APPLICATION_JSON})
     @Produces({MediaType.TEXT_HTML})
@@ -53,7 +53,7 @@ public class TodoResource {
         return items;
 
     }
-    
+
     @GET
     @Path("search")
     @Produces(MediaType.APPLICATION_JSON)
@@ -62,7 +62,7 @@ public class TodoResource {
         List<Todo> items = todoService.search(query);
         return items;
 
-    }    
+    }
 
     @GET
     @Path("{id}")
@@ -74,11 +74,46 @@ public class TodoResource {
 
     }
 
+    @GET
+    @Path("{id}/done")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response markDone(@PathParam("id") String id) throws Exception {
+
+        Todo model = new Todo();
+        model.setId(id);
+        model.setDone(true);
+        
+        todoService.partialUpdate(model);
+        
+        // 200
+        return Response.status(Response.Status.OK)
+                .entity("updated")
+                .header("Location", AppConst.TODO_PATH + "/" + id).build();
+    }
+
+    @GET
+    @Path("{id}/undone")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response markUndone(@PathParam("id") String id) throws Exception {
+
+        Todo model = new Todo();
+        model.setId(id);
+        model.setDone(false);
+        
+        todoService.partialUpdate(model);
+
+        // 200
+        return Response.status(Response.Status.OK)
+                .entity("updated")
+                .header("Location", AppConst.TODO_PATH + "/" + id).build();
+
+    }
+
     @PUT
     @Path("{id}")
     @Consumes({MediaType.APPLICATION_JSON})
     @Produces({MediaType.TEXT_HTML})
-    public Response putItem(@PathParam("id") String id, Todo model)
+    public Response update(@PathParam("id") String id, Todo model)
             throws AppException, Exception {
 
         Todo found = todoService.find(id);
@@ -102,15 +137,14 @@ public class TodoResource {
 
         }
     }
-    
-    
+
     @PATCH
     @Path("{id}")
     @Consumes({MediaType.APPLICATION_JSON})
     @Produces({MediaType.TEXT_HTML})
-    public Response patchItem(@PathParam("id") String id, Todo model)
+    public Response patch(@PathParam("id") String id, Todo model)
             throws AppException, Exception {
-        
+
         Todo found = todoService.find(id);
 
         if (found == null) {
@@ -131,12 +165,12 @@ public class TodoResource {
                     .header("Location", AppConst.TODO_PATH + "/" + id).build();
 
         }
-    }    
+    }
 
     @DELETE
     @Path("{id}")
     @Produces({MediaType.TEXT_HTML})
-    public Response deleteItem(@PathParam("id") String id) {
+    public Response delete(@PathParam("id") String id) {
 
         todoService.delete(id);
         // 204
@@ -144,6 +178,7 @@ public class TodoResource {
                 .entity("deleted").build();
     }
 
+    //spring DI
     public void setTodoService(TodoService todoService) {
         this.todoService = todoService;
     }

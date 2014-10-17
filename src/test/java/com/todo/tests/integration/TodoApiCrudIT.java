@@ -10,7 +10,6 @@ import com.google.gson.Gson;
 import com.todo.api.dao.TodoDao;
 import com.todo.api.domain.Todo;
 import com.todo.api.filters.AppConst;
-import java.io.UnsupportedEncodingException;
 import java.util.List;
 import org.junit.Before;
 
@@ -57,6 +56,7 @@ public class TodoApiCrudIT {
     @Before
     public void setUp() throws Exception {
 
+        // ex: http://localhost:8080/todo-app/v1/todo
         TODO_API_URL = BASE_URL + AppConst.TODO_PATH;
         numCreate = 25;
 
@@ -76,7 +76,7 @@ public class TodoApiCrudIT {
         testGetAll();
         testPost();
         testUpdate();
-        testPatch();
+        testPatchDone();
         testDelete();
 
         //create multiple documents
@@ -86,10 +86,35 @@ public class TodoApiCrudIT {
         //test search
         testSearch();
 
+        //test mark done/undone 
+        testStatus();
+        
+    }
+
+    private void testStatus() throws Exception {
+
+        //create new item
+        Todo item = new Todo("Send Sms message", "Once completed send sms message", false);
+        item = testPost(item);
+
+        //mark as done.
+        this.markDone(item.getId());
+
+        //verify
+        item = this.getById(item.getId());
+        Assert.assertTrue(item.getDone());
+        
+        //mark as undone.
+        this.markUndone(item.getId());
+
+        //verify
+        item = this.getById(item.getId());
+        Assert.assertFalse(item.getDone());
+
     }
 
     private List<Todo> testSearch() throws Exception {
-        
+
         String query = "2";
         WebTarget webTarget = client.target(TODO_API_URL + "/search?q=" + query);
 
@@ -101,12 +126,12 @@ public class TodoApiCrudIT {
 
         List<Todo> items = response.readEntity(new GenericType<List<Todo>>() {
         });
-        
-        System.out.println("testSearch results ["+items.size()+"]");
+
+        System.out.println("testSearch results [" + items.size() + "]");
         for (Todo item : items) {
             System.out.println(item);
         }
-        
+
         return items;
     }
 
@@ -129,35 +154,49 @@ public class TodoApiCrudIT {
 
     private Todo testPost() throws Exception {
 
-        String location = postItem(this.model);
-        Todo found = findByLocation(location);
+        Todo found = this.testPost(this.model);
+        this.model = found;
+        return found;
+
+    }
+
+    private Todo testPost(Todo model) throws Exception {
+
+        String location = post(model);
+        Todo found = getByLocation(location);
 
         Assert.assertNotNull(found);
-        Assert.assertEquals(this.model.getTitle(), found.getTitle());
-        Assert.assertEquals(this.model.getDescription(), found.getDescription());
-        Assert.assertEquals(this.model.getDone(), found.getDone());
-
-        this.model = found;
+        Assert.assertEquals(model.getTitle(), found.getTitle());
+        Assert.assertEquals(model.getDescription(), found.getDescription());
+        Assert.assertEquals(model.getDone(), found.getDone());
 
         return found;
     }
 
-    private void testUpdate() throws Exception {
+    private Todo testUpdate() throws Exception {
 
         this.model.setTitle(this.model.getTitle() + " - updated through api");
         this.model.setDescription(this.model.getDescription() + " - updated through api");
-        this.model.setDone(true);
+        this.model.setDone(!this.model.getDone());
 
-        updateItem(this.model);
-        Todo found = findById(this.model.getId());
+        return testUpdate(this.model);
 
-        Assert.assertNotNull(found);
-        Assert.assertEquals(this.model.getTitle(), found.getTitle());
-        Assert.assertEquals(this.model.getDescription(), found.getDescription());
-        Assert.assertEquals(this.model.getDone(), found.getDone());
     }
 
-    private void testPatch() throws Exception {
+    private Todo testUpdate(Todo model) throws Exception {
+
+        update(model);
+        Todo found = getById(model.getId());
+
+        Assert.assertNotNull(found);
+        Assert.assertEquals(model.getTitle(), found.getTitle());
+        Assert.assertEquals(model.getDescription(), found.getDescription());
+        Assert.assertEquals(model.getDone(), found.getDone());
+
+        return found;
+    }
+
+    private Todo testPatchDone() throws Exception {
 
         boolean done = !this.model.getDone();
 
@@ -165,20 +204,33 @@ public class TodoApiCrudIT {
         todoPatch.setId(this.model.getId());
         todoPatch.setDone(done);
 
-        patchItem(todoPatch);
-        Todo found = findById(this.model.getId());
+        return testPatchDone(todoPatch, this.model);
+    }
+
+    private Todo testPatchDone(Todo todoPatch, Todo todo) throws Exception {
+
+
+        patch(todoPatch);
+        Todo found = getById(todo.getId());
 
         Assert.assertNotNull(found);
-        Assert.assertEquals(this.model.getTitle(), found.getTitle());
-        Assert.assertEquals(this.model.getDescription(), found.getDescription());
+        Assert.assertEquals(todo.getTitle(), found.getTitle());
+        Assert.assertEquals(todo.getDescription(), found.getDescription());
         Assert.assertEquals(todoPatch.getDone(), found.getDone());
+
+        return found;
     }
 
     private void testDelete() throws Exception {
+        String id = this.model.getId();
+        testDelete(id);
+    }
 
-        Todo found = findById(this.model.getId());
+    private void testDelete(String id) throws Exception {
 
-        deleteItem(found);
+        Todo found = getById(id);
+
+        delete(found);
 
         //make sure it doesn't exist anymore
         WebTarget webTarget = client.target(TODO_API_URL + "/" + found.getId());
@@ -194,12 +246,13 @@ public class TodoApiCrudIT {
 
         for (int i = 1; i <= this.numCreate; i++) {
 
-            postItem(new Todo("Test Todo #" + i, "Todo Description #" + i));
+            post(new Todo("Test Todo #" + i, "Todo Description #" + i));
 
         }
     }
 
-    private String postItem(Todo item) {
+    //Basic operations, POST, PUT, PATCH, GET, DELETE
+    private String post(Todo item) {
 
         WebTarget webTarget = client.target(TODO_API_URL);
 
@@ -214,7 +267,7 @@ public class TodoApiCrudIT {
 
     }
 
-    private void updateItem(Todo item) {
+    private void update(Todo item) {
 
         WebTarget webTarget = client.target(TODO_API_URL + "/" + item.getId());
 
@@ -232,7 +285,7 @@ public class TodoApiCrudIT {
      *
      * @throws Exception
      */
-    public void patchItem(Todo item) throws Exception {
+    public void patch(Todo item) throws Exception {
 
         HttpClient httpClient = new DefaultHttpClient();
         HttpPatch httpPatch = new HttpPatch(TODO_API_URL + "/" + item.getId());
@@ -247,7 +300,7 @@ public class TodoApiCrudIT {
         Assert.assertTrue(response.getStatusLine().getStatusCode() == 200);
     }
 
-    private void deleteItem(Todo item) {
+    private void delete(Todo item) {
 
         WebTarget webTarget = client.target(TODO_API_URL + "/" + item.getId());
 
@@ -259,12 +312,40 @@ public class TodoApiCrudIT {
 
     }
 
-    private Todo findById(String id) throws Exception {
+    private void markDone(String id) throws Exception {
 
-        return findByLocation(TODO_API_URL + "/" + id);
+        String location = TODO_API_URL + "/" + id + "/done";
+        
+        WebTarget webTarget = client.target(location);
+
+        Builder request = webTarget.request();
+        request.header("Content-type", MediaType.APPLICATION_JSON);
+
+        Response response = request.get();
+        Assert.assertTrue(response.getStatus() == 200);
+        
     }
 
-    private Todo findByLocation(String location) throws Exception {
+    private void markUndone(String id) throws Exception {
+
+        String location = TODO_API_URL + "/" + id + "/undone";
+        
+        WebTarget webTarget = client.target(location);
+
+        Builder request = webTarget.request();
+        request.header("Content-type", MediaType.APPLICATION_JSON);
+
+        Response response = request.get();
+        Assert.assertTrue(response.getStatus() == 200);
+
+    }
+
+    private Todo getById(String id) throws Exception {
+
+        return getByLocation(TODO_API_URL + "/" + id);
+    }
+
+    private Todo getByLocation(String location) throws Exception {
 
         WebTarget webTarget = client.target(location);
 
@@ -275,10 +356,6 @@ public class TodoApiCrudIT {
         Assert.assertTrue(response.getStatus() == 200);
 
         Todo found = response.readEntity(Todo.class);
-
-        ObjectMapper mapper = new ObjectMapper();
-        System.out.print(mapper.writerWithDefaultPrettyPrinter()
-                .writeValueAsString(found));
 
         return found;
     }
