@@ -56,7 +56,7 @@ public class TodoApiCrudIT {
     @Before
     public void setUp() throws Exception {
 
-        // ex: http://localhost:8080/todo-app/v1/todo
+        // ex: http://localhost:8080/todo-api/v1/todo
         TODO_API_URL = BASE_URL + AppConst.TODO_PATH;
         numCreate = 25;
 

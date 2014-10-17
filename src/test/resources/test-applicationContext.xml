@@ -25,17 +25,17 @@
     <!-- Configurer that replaces ${...} placeholders with values from a properties file -->
     <context:property-placeholder location="classpath:config.properties"/>
 
-    <!-- Mongo DB -->
+     <!--Mongo DB--> 
     <mongo:mongo host="${db.host}" port="${db.port}" id="mongo" />
 
-    <!-- Mongo DB Factory -->
+     <!--Mongo DB Factory--> 
     <mongo:db-factory dbname="${db.name}" mongo-ref="mongo" id="mongoDbFactory" />    
 
-    <!-- Mongo Template -->
+     <!--Mongo Template--> 
     <bean id="mongoTemplate" class="org.springframework.data.mongodb.core.MongoTemplate">
             <constructor-arg name="mongoDbFactory" ref="mongoDbFactory" />
     </bean>    
-
+    
     <bean id="todoDao" class="com.todo.api.dao.TodoMongoDbDaoImpl">	
 	<constructor-arg name="mongoOps" ref="mongoTemplate"/>
     </bean>
