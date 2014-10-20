@@ -44,6 +44,7 @@ public class SearchService {
     private static Integer timeout;
     private static String INDEX_TODOS = "todos";
     private static String TYPE_TODO = "todo";
+    private boolean enabled;
 
     @PostConstruct
     public void initialize() throws Exception {
@@ -52,7 +53,7 @@ public class SearchService {
     }
 
     public boolean deleteIndex() {
-        
+
         try {
             // Delete index if it is exists
             DeleteIndex deleteIndex = new DeleteIndex.Builder(INDEX_TODOS).build();
@@ -65,14 +66,14 @@ public class SearchService {
 
         return false;
     }
-    
+
     /**
      * Create Todos Index if it does not exist
      *
      * @throws Exception
      */
     public void createIndex() throws Exception {
-        
+
         IndicesExists indicesExists = new IndicesExists.Builder(INDEX_TODOS).build();
         JestResult result = jestClient.execute(indicesExists);
 
@@ -82,7 +83,6 @@ public class SearchService {
             jestClient.execute(createIndex);
         }
     }
-    
 
     public boolean index(TodoEntity item) throws Exception {
 
@@ -272,7 +272,7 @@ public class SearchService {
             }
         }
     }
-    
+
     /**
      * Release client connections
      */
@@ -286,6 +286,13 @@ public class SearchService {
             }
 
         }
-    }    
+    }
 
+    public boolean isEnabled() {
+        return enabled;
+    }
+
+    public void setEnabled(boolean enabled) {
+        this.enabled = enabled;
+    }
 }

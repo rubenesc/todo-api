@@ -16,8 +16,6 @@ public interface TodoDao {
     //create
     public void create(TodoEntity item);
 
-    public void create(List<TodoEntity> items);
-    
     //retrieve
     public List<TodoEntity> find();
 

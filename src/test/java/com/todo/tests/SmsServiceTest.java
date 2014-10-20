@@ -5,13 +5,10 @@
 package com.todo.tests;
 
 import com.todo.api.exceptions.ValidationException;
-import com.todo.api.service.SearchService;
 import com.todo.api.service.SmsService;
 import com.twilio.sdk.TwilioRestException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.junit.After;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -36,11 +33,15 @@ public class SmsServiceTest {
 
     @Test
     public void test() throws Exception {
-
-        testSendMessage();
-        testSendMessageInvalidBody();
-        testSendMessageEmptyToNumber();
-        testSendMessageInvalidToNumber();
+        
+        if (smsService.isEnabled()){
+            
+            testSendMessage();
+            testSendMessageInvalidBody();
+            testSendMessageEmptyToNumber();
+            testSendMessageInvalidToNumber();
+            
+        }
         
     }
 

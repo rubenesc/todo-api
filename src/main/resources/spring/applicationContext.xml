@@ -57,11 +57,13 @@
     </bean>       
     
     <bean id="searchService" class="com.todo.api.service.SearchService" >
+        <property name="enabled" value="${search.enabled}"/> 
         <property name="url" value="${es.url}"/> 
         <property name="timeout" value="${es.timeout}"/> 
     </bean>       
     
     <bean id="smsService" class="com.todo.api.service.SmsService" >
+        <property name="enabled" value="${sms.enabled}"/> 
         <property name="accountSid" value="${twilio.accountSid}"/> 
         <property name="authToken" value="${twilio.authToken}"/> 
         <property name="defaultTo" value="${twilio.defaultTo}"/> 

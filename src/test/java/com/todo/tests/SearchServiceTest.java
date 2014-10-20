@@ -35,42 +35,47 @@ public class SearchServiceTest {
 
     @Before
     public void setUp() throws Exception {
-        this.cleanTodoDB();
-        searchService.deleteIndex();
-        searchService.createIndex();
+
+        if (searchService.isEnabled()) {
+            this.cleanTodoDB();
+            searchService.deleteIndex();
+            searchService.createIndex();
+
+        }
+
     }
-    
+
     @After
     public void cleanUp() throws Exception {
     }
-    
 
     @Test
     public void test() throws Exception {
+        
+        if (searchService.isEnabled()) {
+            testCrudOperatons();
+            testIndexMultipleItems();
+        }
 
-        testCrudOperatons();
-        testIndexMultipleItems();
-        
-        
     }
 
     private void testIndexMultipleItems() throws Exception {
-        
+
         List<TodoEntity> items = buildMockData();
-        
+
         boolean result;
         for (TodoEntity item : items) {
             this.create(item);
             result = searchService.index(item);
-            Assert.assertTrue("faild to index document with id ["+item.getId()+"]", result);
+            Assert.assertTrue("faild to index document with id [" + item.getId() + "]", result);
         }
 
         String query = "luctus";
         List<TodoEntity> list = searchService.searchTodos(query);
         Assert.assertNotNull(list);
         System.out.println("testIndexMultipleItems ...");
-        
-        System.out.println("Search Results ["+query+"]["+list.size()+"]: ");
+
+        System.out.println("Search Results [" + query + "][" + list.size() + "]: ");
         for (TodoEntity item : list) {
             System.out.println(item);
         }
@@ -78,14 +83,14 @@ public class SearchServiceTest {
     }
 
     private void testCrudOperatons() throws Exception {
-        
+
         TodoEntity entity = new TodoEntity("Todo 1", "Description for todo #1");
         this.create(entity);
-        
+
         //create document
         boolean result = searchService.index(entity);
-        Assert.assertTrue("faild to index document with id ["+entity.getId()+"]", result);
-        
+        Assert.assertTrue("faild to index document with id [" + entity.getId() + "]", result);
+
 //        String query = "luctus";
 //        List<TodoEntity> result = searchService.searchTodos(query);
 //        Assert.assertNotNull(result);
@@ -98,27 +103,27 @@ public class SearchServiceTest {
 //        for (TodoEntity item : result) {
 //            System.out.println(item);
 //        }
-        
-        
+
+
         //find document and should match
         TodoEntity found = searchService.findDocument(entity.getId());
-        
+
         Assert.assertNotNull(found);
         Assert.assertEquals(entity.getId(), found.getId());
         Assert.assertEquals(entity.getTitle(), found.getTitle());
         Assert.assertEquals(entity.getDescription(), found.getDescription());
         Assert.assertEquals(entity.getDone(), found.getDone());
-        
-        
+
+
         //should update document
 //        entity.setDone(true);
 //        entity.setDescription("description updated");
 //        boolean result = searchService.updateDocument(found);
-        
+
         //delete document
         boolean deleteResult = searchService.deleteDocument(entity.getId());
-        Assert.assertTrue("faild to delete document with id ["+entity.getId()+"]", deleteResult);
-        
+        Assert.assertTrue("faild to delete document with id [" + entity.getId() + "]", deleteResult);
+
         //should not find document
         found = searchService.findDocument(entity.getId());
         Assert.assertNull(found);

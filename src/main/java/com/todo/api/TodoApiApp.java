@@ -10,7 +10,6 @@ import com.todo.api.exceptions.NotFoundExceptionMapper;
 import com.todo.api.filters.CORSResponseFilter;
 import com.todo.api.filters.LoggingResponseFilter;
 import com.todo.api.resource.TodoResource;
-import java.lang.annotation.Annotation;
 import org.glassfish.jersey.jackson.JacksonFeature;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.glassfish.jersey.message.filtering.EntityFilteringFeature;

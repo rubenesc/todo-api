@@ -36,21 +36,23 @@ public class TodoService {
     SearchService searchService;    
     
     @Autowired
-    SmsService smsService;    
+    SmsService smsService;  
     
-    public String create(Todo model) throws Exception {
-
+    public Todo create(Todo model) throws Exception {
+        
         validateInputForCreation(model);
-
-        TodoEntity entity = new TodoEntity(model);
-
+        
+        //update attributes
+        TodoEntity entity = new TodoEntity();
+        updateAttributes(entity, model);
+        
         //persist data
         todoDao.create(entity);
         
         //index data
         searchService.index(entity);
         
-        return entity.getId();
+        return new Todo(entity);
     }
 
 
@@ -66,11 +68,8 @@ public class TodoService {
 
         TodoEntity entity = todoDao.find(id);
 
-        if (entity == null) {
-            throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
-                    404, "The resource with id " + id + " was not found.");
-        }
-
+        validateFound(entity, id);
+        
         return new Todo(entity);
 
     }
@@ -80,6 +79,8 @@ public class TodoService {
         validateInputForUpdate(item);
         
         TodoEntity entity = todoDao.find(item.getId());
+
+        validateFound(entity, item.getId());
         
         boolean before = entity.getDone();
         
@@ -94,6 +95,8 @@ public class TodoService {
     public void partialUpdate(Todo item) throws Exception {
         
         TodoEntity entity = todoDao.find(item.getId());
+
+        validateFound(entity, item.getId());
         
         boolean before = entity.getDone();
         
@@ -212,4 +215,12 @@ public class TodoService {
             this.smsService.send(msg);
         }
     }
+
+    private void validateFound(TodoEntity entity, String id) throws AppException {
+        if (entity == null) {
+            throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
+                    404, "The resource with id " + id + " was not found.");
+        }
+    }
+
 }

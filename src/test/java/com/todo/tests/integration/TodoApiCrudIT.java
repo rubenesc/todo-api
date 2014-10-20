@@ -6,30 +6,15 @@ package com.todo.tests.integration;
 
 //import com.sun.jersey.api.client.ClientResponse;
 //import com.sun.jersey.api.client.WebResource;
-import com.google.gson.Gson;
+import com.todo.tests.integration.ext.RestOperations;
 import com.todo.api.dao.TodoDao;
 import com.todo.api.domain.Todo;
-import com.todo.api.filters.AppConst;
 import java.util.List;
 import org.junit.Before;
 
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.client.Entity;
-import javax.ws.rs.client.Invocation.Builder;
-import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.Response;
 import org.apache.http.HttpResponse;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpPatch;
-import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.DefaultHttpClient;
-
-import org.codehaus.jackson.map.ObjectMapper;
-import org.glassfish.jersey.client.ClientConfig;
-import org.glassfish.jersey.jackson.JacksonFeature;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -43,11 +28,8 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration({"classpath:test-applicationContext.xml"})
-public class TodoApiCrudIT {
+public class TodoApiCrudIT extends RestOperations{
 
-    private String BASE_URL = "http://localhost:8080";
-    private String TODO_API_URL;
-    Client client;
     Todo model;
     int numCreate; //Numer of documents to create
     @Autowired
@@ -56,17 +38,10 @@ public class TodoApiCrudIT {
     @Before
     public void setUp() throws Exception {
 
-        // ex: http://localhost:8080/todo-api/v1/todo
-        TODO_API_URL = BASE_URL + AppConst.TODO_PATH;
+        init();
+
         numCreate = 25;
-
-        ClientConfig clientConfig = new ClientConfig();
-        clientConfig.register(JacksonFeature.class);
-
-        client = ClientBuilder.newClient(clientConfig);
-
         model = new Todo("Test API", "Test Todo API methods: POST, PUT, GET, DELETE");
-
         todoDao.deleteAll();
     }
 
@@ -74,9 +49,16 @@ public class TodoApiCrudIT {
     public void testTodoCrudOperations() throws Exception {
 
         testGetAll();
+        
         testPost();
+        testInvalidPost();
+        
         testUpdate();
+        testInvalidUpdate();
+        
         testPatchDone();
+        testInvalidPatch();
+        
         testDelete();
 
         //create multiple documents
@@ -88,9 +70,30 @@ public class TodoApiCrudIT {
 
         //test mark done/undone 
         testStatus();
+        testInvalidStatus();
         
+        testBadRequest();
     }
 
+    private void testBadRequest(){
+        
+        //create empty todo
+        Todo item = new Todo();
+        Response response = post(item);
+        
+        //expect 400 - Malformed message
+        Assert.assertEquals(400, response.getStatus());
+        
+    }
+    
+    
+    private void testInvalidStatus() throws Exception {
+        String id = "A1B2C3D4E5F6G7";
+        Response response = this.markDone(id);
+        Assert.assertEquals(404, response.getStatus()); //Not found
+    }
+        
+    
     private void testStatus() throws Exception {
 
         //create new item
@@ -98,14 +101,16 @@ public class TodoApiCrudIT {
         item = testPost(item);
 
         //mark as done.
-        this.markDone(item.getId());
+        Response response = this.markDone(item.getId());
+        Assert.assertEquals(200, response.getStatus());
 
         //verify
         item = this.getById(item.getId());
         Assert.assertTrue(item.getDone());
         
         //mark as undone.
-        this.markUndone(item.getId());
+        response = this.markUndone(item.getId());
+        Assert.assertEquals(200, response.getStatus());
 
         //verify
         item = this.getById(item.getId());
@@ -116,62 +121,72 @@ public class TodoApiCrudIT {
     private List<Todo> testSearch() throws Exception {
 
         String query = "2";
-        WebTarget webTarget = client.target(TODO_API_URL + "/search?q=" + query);
-
-        Builder request = webTarget.request();
-        request.header("Content-type", MediaType.APPLICATION_JSON);
-
-        Response response = request.get();
-        Assert.assertTrue(response.getStatus() == 200);
-
+        Response response = get(TODO_API_URL + "/search?q=" + query);
+        
+        Assert.assertEquals(200, response.getStatus());
+        
         List<Todo> items = response.readEntity(new GenericType<List<Todo>>() {
         });
-
-        System.out.println("testSearch results [" + items.size() + "]");
-        for (Todo item : items) {
-            System.out.println(item);
-        }
 
         return items;
     }
 
     private List<Todo> testGetAll() throws Exception {
 
-
-        WebTarget webTarget = client.target(TODO_API_URL);
-
-        Builder request = webTarget.request();
-        request.header("Content-type", MediaType.APPLICATION_JSON);
-
-        Response response = request.get();
-        Assert.assertTrue(response.getStatus() == 200);
-
+        Response response = get(TODO_API_URL);
+        Assert.assertEquals(200, response.getStatus());
         List<Todo> items = response.readEntity(new GenericType<List<Todo>>() {
         });
 
         return items;
     }
 
+    private void testInvalidPost() {
+        
+        Todo item = new Todo();
+        Response response = post(item);
+
+        Assert.assertEquals(400, response.getStatus()); //Bad request
+    }
+    
+    
     private Todo testPost() throws Exception {
 
         Todo found = this.testPost(this.model);
         this.model = found;
+        
         return found;
-
     }
-
+    
     private Todo testPost(Todo model) throws Exception {
+        
+        //create item
+        Response responsePost = post(model);
+        Assert.assertEquals(201, responsePost.getStatus());
+        Assert.assertNotNull("Missing location on POST response", responsePost.getLocation());
+//        Todo created = responsePost.readEntity(Todo.class);
+//        verifyItemMatch(model, created);        
+        
+        String location = responsePost.getLocation().toString();
+        
+        //find it and verify
+        Response responseGet = get(location);
+        Assert.assertEquals(200, responseGet.getStatus());
+        Todo foundGet = responseGet.readEntity(Todo.class);
+        verifyItemMatch(model, foundGet);
 
-        String location = post(model);
-        Todo found = getByLocation(location);
-
-        Assert.assertNotNull(found);
-        Assert.assertEquals(model.getTitle(), found.getTitle());
-        Assert.assertEquals(model.getDescription(), found.getDescription());
-        Assert.assertEquals(model.getDone(), found.getDone());
-
-        return found;
+        return foundGet;
     }
+    
+    private void testInvalidUpdate() {
+        
+        Todo item = new Todo("some title", "some description", true);
+        item.setId("123456");
+        
+        Response response = update(item);
+        Assert.assertEquals(404, response.getStatus()); //Not found
+    }
+    
 
     private Todo testUpdate() throws Exception {
 
@@ -184,17 +199,27 @@ public class TodoApiCrudIT {
     }
 
     private Todo testUpdate(Todo model) throws Exception {
+        
+        //update item
+        Response response = update(model);
+        Assert.assertEquals(200, response.getStatus());
 
-        update(model);
+        //verify update
         Todo found = getById(model.getId());
-
-        Assert.assertNotNull(found);
-        Assert.assertEquals(model.getTitle(), found.getTitle());
-        Assert.assertEquals(model.getDescription(), found.getDescription());
-        Assert.assertEquals(model.getDone(), found.getDone());
+        verifyItemMatch(model, found);
 
         return found;
     }
+    
+    private void testInvalidPatch() throws Exception {
+        
+        Todo item = new Todo("some title", "some description", true);
+        item.setId("123456");
+        
+        HttpResponse response = patch(item);
+        Assert.assertEquals(404, response.getStatusLine().getStatusCode()); //Not found
+    }
+    
 
     private Todo testPatchDone() throws Exception {
 
@@ -208,9 +233,11 @@ public class TodoApiCrudIT {
     }
 
     private Todo testPatchDone(Todo todoPatch, Todo todo) throws Exception {
-
-
-        patch(todoPatch);
+        
+        HttpResponse response = patch(todoPatch);
+        
+        Assert.assertEquals(200, response.getStatusLine().getStatusCode());
+        
         Todo found = getById(todo.getId());
 
         Assert.assertNotNull(found);
@@ -227,19 +254,17 @@ public class TodoApiCrudIT {
     }
 
     private void testDelete(String id) throws Exception {
-
+        
+        //find an item
         Todo found = getById(id);
 
-        delete(found);
-
+        //delete it
+        Response response = delete(found);
+        Assert.assertEquals(204, response.getStatus());
+        
         //make sure it doesn't exist anymore
-        WebTarget webTarget = client.target(TODO_API_URL + "/" + found.getId());
-
-        Builder request = webTarget.request();
-        request.header("Content-type", MediaType.APPLICATION_JSON);
-
-        Response response = request.get();
-        Assert.assertTrue(response.getStatus() == 404);
+        response = get(TODO_API_URL + "/" + found.getId());
+        Assert.assertEquals(404, response.getStatus());
     }
 
     private void testPostMultiple() {
@@ -251,112 +276,36 @@ public class TodoApiCrudIT {
         }
     }
 
-    //Basic operations, POST, PUT, PATCH, GET, DELETE
-    private String post(Todo item) {
+    private Response markDone(String id) throws Exception {
 
-        WebTarget webTarget = client.target(TODO_API_URL);
-
-        Builder request = webTarget.request();
-        request.header("Content-type", MediaType.APPLICATION_JSON);
-
-        Response response = request.post(Entity.entity(item, MediaType.APPLICATION_JSON));
-        Assert.assertTrue(response.getStatus() == 201);
-        Assert.assertNotNull("Missing location on POST response", response.getLocation());
-
-        return response.getLocation().toString();
-
+        String url = TODO_API_URL + "/" + id + "/done";
+        Response response = get(url);
+        return response;
     }
 
-    private void update(Todo item) {
+    private Response markUndone(String id) throws Exception {
 
-        WebTarget webTarget = client.target(TODO_API_URL + "/" + item.getId());
-
-        Builder request = webTarget.request();
-        request.header("Content-type", MediaType.APPLICATION_JSON);
-
-        Response response = request.put(Entity.entity(item, MediaType.APPLICATION_JSON));
-        Assert.assertTrue(response.getStatus() == 200);
-
-    }
-
-    /**
-     * Partial update with PATCH method. Used Apache httpClient instead of
-     * jersey, due to lack of support of PATCH method.
-     *
-     * @throws Exception
-     */
-    public void patch(Todo item) throws Exception {
-
-        HttpClient httpClient = new DefaultHttpClient();
-        HttpPatch httpPatch = new HttpPatch(TODO_API_URL + "/" + item.getId());
-
-        Gson gson = new Gson();
-        StringEntity entity = new StringEntity(gson.toJson(item));
-        entity.setContentType(MediaType.APPLICATION_JSON);
-
-        httpPatch.setEntity(entity);
-        HttpResponse response = httpClient.execute(httpPatch);
-
-        Assert.assertTrue(response.getStatusLine().getStatusCode() == 200);
-    }
-
-    private void delete(Todo item) {
-
-        WebTarget webTarget = client.target(TODO_API_URL + "/" + item.getId());
-
-        Builder request = webTarget.request();
-        request.header("Content-type", MediaType.APPLICATION_JSON);
-
-        Response response = request.delete();
-        Assert.assertTrue(response.getStatus() == 204);
-
-    }
-
-    private void markDone(String id) throws Exception {
-
-        String location = TODO_API_URL + "/" + id + "/done";
-        
-        WebTarget webTarget = client.target(location);
-
-        Builder request = webTarget.request();
-        request.header("Content-type", MediaType.APPLICATION_JSON);
-
-        Response response = request.get();
-        Assert.assertTrue(response.getStatus() == 200);
-        
-    }
-
-    private void markUndone(String id) throws Exception {
-
-        String location = TODO_API_URL + "/" + id + "/undone";
-        
-        WebTarget webTarget = client.target(location);
-
-        Builder request = webTarget.request();
-        request.header("Content-type", MediaType.APPLICATION_JSON);
-
-        Response response = request.get();
-        Assert.assertTrue(response.getStatus() == 200);
+        String url = TODO_API_URL + "/" + id + "/undone";
+        Response response = get(url);
+        return response;
 
     }
 
     private Todo getById(String id) throws Exception {
 
-        return getByLocation(TODO_API_URL + "/" + id);
-    }
-
-    private Todo getByLocation(String location) throws Exception {
-
-        WebTarget webTarget = client.target(location);
-
-        Builder request = webTarget.request();
-        request.header("Content-type", MediaType.APPLICATION_JSON);
-
-        Response response = request.get();
-        Assert.assertTrue(response.getStatus() == 200);
-
+        Response response = get(TODO_API_URL + "/" + id);
+        Assert.assertEquals(200, response.getStatus());
         Todo found = response.readEntity(Todo.class);
 
         return found;
+        
     }
+
+    private void verifyItemMatch(Todo expected, Todo actual) {
+        Assert.assertNotNull(actual);
+        Assert.assertEquals(expected.getTitle(), actual.getTitle());
+        Assert.assertEquals(expected.getDescription(), actual.getDescription());
+        Assert.assertEquals(expected.getDone(), actual.getDone());
+    }
+
 }

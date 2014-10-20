@@ -15,7 +15,6 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-import org.springframework.test.context.support.AnnotationConfigContextLoader;
 
 /**
  *
@@ -37,18 +36,23 @@ public class TodoDaoTest {
 
     @Test
     public void daoOperations() {
-        this.deleteAll();
+        
         this.create();
+        
         this.find();
+        this.invalidFind();
+        
         this.update();
+        
         this.delete();
+        this.invalidDelete();
 
     }
 
     private void deleteAll() {
         int total = todoDao.deleteAll();
         List<TodoEntity> items = todoDao.find();
-        Assert.assertTrue("Clean TODO table", items.size() == 0);
+        Assert.assertEquals("Clean TODO table", 0, items.size());
     }
 
     public void create() {
@@ -58,13 +62,18 @@ public class TodoDaoTest {
         Assert.assertNotNull(entityId);
     }
 
+    public void invalidFind(){
+        TodoEntity found = todoDao.find("123456");
+        Assert.assertNull(found);
+    }
+    
     public void find() {
         TodoEntity found = todoDao.find(this.entity.getId());
         Assert.assertNotNull(found);
         Assert.assertEquals(this.entity.getTitle(), found.getTitle());
         Assert.assertEquals(this.entity.getDescription(), found.getDescription());
     }
-
+        
     public void update() {
 
         this.entity.setTitle(this.entity.getTitle() + " - updated through dao");
@@ -79,10 +88,17 @@ public class TodoDaoTest {
         Assert.assertEquals(this.entity.getDone(), found.getDone());
     }
 
+    private void invalidDelete(){
+
+        int total = todoDao.delete("123456");
+        Assert.assertEquals("Delete TODO item", 0, total);
+        
+    }
+    
     private void delete() {
 
         int total = this.todoDao.delete(this.entity.getId());
-        Assert.assertTrue("Delete TODO item", total == 1);
+        Assert.assertEquals("Delete TODO item", 1, total);
 
         TodoEntity found = todoDao.find(this.entity.getId());
         Assert.assertNull(found);

@@ -18,7 +18,6 @@ public class GenericExceptionMapper implements ExceptionMapper<Throwable> {
         errorMessage.setMessage(ex.getMessage());
         StringWriter errorStackTrace = new StringWriter();
         ex.printStackTrace(new PrintWriter(errorStackTrace));
-        errorMessage.setDeveloperMessage(errorStackTrace.toString());
 
         return Response.status(errorMessage.getStatus())
                 .entity(errorMessage)

@@ -31,10 +31,6 @@ public class TodoMongoDbDaoImpl implements TodoDao {
         this.mongoOps.insert(item, COLLECTION);
    }
 
-    public void create(List<TodoEntity> items) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
     public List<TodoEntity> find() {
         return this.mongoOps.findAll(TodoEntity.class, COLLECTION);
     }

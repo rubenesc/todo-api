@@ -8,7 +8,6 @@ import com.todo.api.resource.ext.PATCH;
 import com.todo.api.domain.Todo;
 import com.todo.api.exceptions.AppException;
 import com.todo.api.filters.AppConst;
-import com.todo.api.service.SearchService;
 import com.todo.api.service.TodoService;
 import java.util.List;
 import javax.ws.rs.Consumes;
@@ -32,9 +31,8 @@ import org.springframework.beans.factory.annotation.Autowired;
  */
 @Path("/v1/todo")
 public class TodoResource {
-    
-    final static Logger logger = LoggerFactory.getLogger(TodoResource.class);
 
+    final static Logger logger = LoggerFactory.getLogger(TodoResource.class);
     @Autowired
     private TodoService todoService;
 
@@ -43,19 +41,33 @@ public class TodoResource {
     @Produces({MediaType.TEXT_HTML})
     public Response create(Todo model) throws Exception {
         
-        String id = todoService.create(model);
-        // 201
-        return Response.status(Response.Status.CREATED)
-                .entity("created")
-                .header("Location", AppConst.TODO_PATH + "/" + id).build();
+        try {
+
+            Todo created = todoService.create(model);
+            // 201
+            return Response.status(Response.Status.CREATED)
+                    .entity("created")
+                    .header("Location", AppConst.TODO_PATH + "/" + created.getId()).build();
+
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+            throw e;
+        }
+
+
     }
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public List<Todo> getItems() throws Exception {
         
-        List<Todo> items = todoService.find();
-        return items;
+        try {
+            List<Todo> items = todoService.find();
+            return items;
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+            throw e;
+        }
 
     }
 
@@ -63,9 +75,14 @@ public class TodoResource {
     @Path("search")
     @Produces(MediaType.APPLICATION_JSON)
     public List<Todo> search(@QueryParam("q") String query) throws Exception {
-
-        List<Todo> items = todoService.search(query);
-        return items;
+        
+        try {
+            List<Todo> items = todoService.search(query);
+            return items;
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+            throw e;
+        }
 
     }
 
@@ -73,9 +90,14 @@ public class TodoResource {
     @Path("{id}")
     @Produces(MediaType.APPLICATION_JSON)
     public Todo getItem(@PathParam("id") String id) throws Exception {
-
-        Todo item = todoService.find(id);
-        return item;
+        
+        try {
+            Todo item = todoService.find(id);
+            return item;
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+            throw e;
+        }
 
     }
 
@@ -83,34 +105,46 @@ public class TodoResource {
     @Path("{id}/done")
     @Produces(MediaType.APPLICATION_JSON)
     public Response markDone(@PathParam("id") String id) throws Exception {
+        
+        try {
+            Todo model = new Todo();
+            model.setId(id);
+            model.setDone(true);
 
-        Todo model = new Todo();
-        model.setId(id);
-        model.setDone(true);
-        
-        todoService.partialUpdate(model);
-        
-        // 200
-        return Response.status(Response.Status.OK)
-                .entity("updated")
-                .header("Location", AppConst.TODO_PATH + "/" + id).build();
+            todoService.partialUpdate(model);
+
+            // 200
+            return Response.status(Response.Status.OK)
+                    .entity("updated")
+                    .header("Location", AppConst.TODO_PATH + "/" + id).build();
+
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+            throw e;
+        }
+
     }
 
     @GET
     @Path("{id}/undone")
     @Produces(MediaType.APPLICATION_JSON)
     public Response markUndone(@PathParam("id") String id) throws Exception {
-
-        Todo model = new Todo();
-        model.setId(id);
-        model.setDone(false);
         
-        todoService.partialUpdate(model);
+        try {
+            Todo model = new Todo();
+            model.setId(id);
+            model.setDone(false);
 
-        // 200
-        return Response.status(Response.Status.OK)
-                .entity("updated")
-                .header("Location", AppConst.TODO_PATH + "/" + id).build();
+            todoService.partialUpdate(model);
+
+            // 200
+            return Response.status(Response.Status.OK)
+                    .entity("updated")
+                    .header("Location", AppConst.TODO_PATH + "/" + id).build();
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+            throw e;
+        }
 
     }
 
@@ -120,27 +154,35 @@ public class TodoResource {
     @Produces({MediaType.TEXT_HTML})
     public Response update(@PathParam("id") String id, Todo model)
             throws AppException, Exception {
+        
+        try {
 
-        Todo found = todoService.find(id);
+            Todo found = todoService.find(id);
 
-        if (found == null) {
+            if (found == null) {
 
-            String newId = todoService.create(model);
-            // 201
-            return Response.status(Response.Status.CREATED)
-                    .entity("created")
-                    .header("Location", AppConst.TODO_PATH + "/" + newId).build();
+                Todo created = todoService.create(model);
+                // 201
+                return Response.status(Response.Status.CREATED)
+                        .entity("created")
+                        .header("Location", AppConst.TODO_PATH + "/" + created.getId()).build();
 
-        } else {
+            } else {
 
-            model.setId(id);
-            todoService.update(model);
-            // 200
-            return Response.status(Response.Status.OK)
-                    .entity("updated")
-                    .header("Location", AppConst.TODO_PATH + "/" + id).build();
+                model.setId(id);
+                todoService.update(model);
+                // 200
+                return Response.status(Response.Status.OK)
+                        .entity("updated")
+                        .header("Location", AppConst.TODO_PATH + "/" + id).build();
 
+            }
+            
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+            throw e;
         }
+
     }
 
     @PATCH
@@ -149,38 +191,41 @@ public class TodoResource {
     @Produces({MediaType.TEXT_HTML})
     public Response patch(@PathParam("id") String id, Todo model)
             throws AppException, Exception {
-
-        Todo found = todoService.find(id);
-
-        if (found == null) {
-
-            String newId = todoService.create(model);
-            // 201
-            return Response.status(Response.Status.CREATED)
-                    .entity("created")
-                    .header("Location", AppConst.TODO_PATH + "/" + newId).build();
-
-        } else {
-
+        
+        try {
+            
             model.setId(id);
             todoService.partialUpdate(model);
+            
             // 200
             return Response.status(Response.Status.OK)
                     .entity("patched")
                     .header("Location", AppConst.TODO_PATH + "/" + id).build();
-
+            
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+            throw e;
         }
+
+
     }
 
     @DELETE
     @Path("{id}")
     @Produces({MediaType.TEXT_HTML})
-    public Response delete(@PathParam("id") String id) {
+    public Response delete(@PathParam("id") String id) throws Exception {
+        
+        try {
+            todoService.delete(id);
+            // 204
+            return Response.status(Response.Status.NO_CONTENT)
+                    .entity("deleted").build();
+            
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+            throw e;
+        }
 
-        todoService.delete(id);
-        // 204
-        return Response.status(Response.Status.NO_CONTENT)
-                .entity("deleted").build();
     }
 
     //spring DI

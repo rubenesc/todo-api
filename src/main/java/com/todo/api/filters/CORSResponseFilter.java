@@ -10,12 +10,14 @@ import javax.ws.rs.core.MultivaluedMap;
 public class CORSResponseFilter
         implements ContainerResponseFilter {
 
+    public static final String ALLOWED_METHODS = "GET, POST, DELETE, PUT, PATCH";
+
     public void filter(ContainerRequestContext requestContext, ContainerResponseContext responseContext)
             throws IOException {
 
         MultivaluedMap<String, Object> headers = responseContext.getHeaders();
 
         headers.add("Access-Control-Allow-Origin", "*");
-        headers.add("Access-Control-Allow-Methods", "GET, POST, DELETE, PUT, PATCH");
+        headers.add("Access-Control-Allow-Methods", ALLOWED_METHODS);
     }
 }
