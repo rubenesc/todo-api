@@ -6,7 +6,6 @@ package com.todo.api.resource;
 
 import com.todo.api.resource.ext.PATCH;
 import com.todo.api.domain.Todo;
-import com.todo.api.exceptions.AppException;
 import com.todo.api.filters.AppConst;
 import com.todo.api.service.TodoService;
 import java.util.List;
@@ -40,34 +39,21 @@ public class TodoResource {
     @Consumes({MediaType.APPLICATION_JSON})
     @Produces({MediaType.TEXT_HTML})
     public Response create(Todo model) throws Exception {
-        
-        try {
 
-            Todo created = todoService.create(model);
-            // 201
-            return Response.status(Response.Status.CREATED)
-                    .entity("created")
-                    .header("Location", AppConst.TODO_PATH + "/" + created.getId()).build();
-
-        } catch (Exception e) {
-            logger.error(e.getMessage(), e);
-            throw e;
-        }
-
+        Todo created = todoService.create(model);
+        // 201
+        return Response.status(Response.Status.CREATED)
+                .entity("created")
+                .header(AppConst.HEADER_LOCATION, AppConst.TODO_PATH + "/" + created.getId()).build();
 
     }
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public List<Todo> getItems() throws Exception {
-        
-        try {
-            List<Todo> items = todoService.find();
-            return items;
-        } catch (Exception e) {
-            logger.error(e.getMessage(), e);
-            throw e;
-        }
+
+        List<Todo> items = todoService.find();
+        return items;
 
     }
 
@@ -75,14 +61,9 @@ public class TodoResource {
     @Path("search")
     @Produces(MediaType.APPLICATION_JSON)
     public List<Todo> search(@QueryParam("q") String query) throws Exception {
-        
-        try {
-            List<Todo> items = todoService.search(query);
-            return items;
-        } catch (Exception e) {
-            logger.error(e.getMessage(), e);
-            throw e;
-        }
+
+        List<Todo> items = todoService.search(query);
+        return items;
 
     }
 
@@ -90,14 +71,9 @@ public class TodoResource {
     @Path("{id}")
     @Produces(MediaType.APPLICATION_JSON)
     public Todo getItem(@PathParam("id") String id) throws Exception {
-        
-        try {
-            Todo item = todoService.find(id);
-            return item;
-        } catch (Exception e) {
-            logger.error(e.getMessage(), e);
-            throw e;
-        }
+
+        Todo item = todoService.find(id);
+        return item;
 
     }
 
@@ -105,23 +81,17 @@ public class TodoResource {
     @Path("{id}/done")
     @Produces(MediaType.APPLICATION_JSON)
     public Response markDone(@PathParam("id") String id) throws Exception {
-        
-        try {
-            Todo model = new Todo();
-            model.setId(id);
-            model.setDone(true);
 
-            todoService.partialUpdate(model);
+        Todo model = new Todo();
+        model.setId(id);
+        model.setDone(true);
 
-            // 200
-            return Response.status(Response.Status.OK)
-                    .entity("updated")
-                    .header("Location", AppConst.TODO_PATH + "/" + id).build();
+        todoService.partialUpdate(model);
 
-        } catch (Exception e) {
-            logger.error(e.getMessage(), e);
-            throw e;
-        }
+        // 200
+        return Response.status(Response.Status.OK)
+                .entity("updated")
+                .header(AppConst.HEADER_LOCATION, AppConst.TODO_PATH + "/" + id).build();
 
     }
 
@@ -129,22 +99,17 @@ public class TodoResource {
     @Path("{id}/undone")
     @Produces(MediaType.APPLICATION_JSON)
     public Response markUndone(@PathParam("id") String id) throws Exception {
-        
-        try {
-            Todo model = new Todo();
-            model.setId(id);
-            model.setDone(false);
 
-            todoService.partialUpdate(model);
+        Todo model = new Todo();
+        model.setId(id);
+        model.setDone(false);
 
-            // 200
-            return Response.status(Response.Status.OK)
-                    .entity("updated")
-                    .header("Location", AppConst.TODO_PATH + "/" + id).build();
-        } catch (Exception e) {
-            logger.error(e.getMessage(), e);
-            throw e;
-        }
+        todoService.partialUpdate(model);
+
+        // 200
+        return Response.status(Response.Status.OK)
+                .entity("updated")
+                .header(AppConst.HEADER_LOCATION, AppConst.TODO_PATH + "/" + id).build();
 
     }
 
@@ -153,34 +118,27 @@ public class TodoResource {
     @Consumes({MediaType.APPLICATION_JSON})
     @Produces({MediaType.TEXT_HTML})
     public Response update(@PathParam("id") String id, Todo model)
-            throws AppException, Exception {
-        
-        try {
+            throws Exception {
 
-            Todo found = todoService.find(id);
+        Todo found = todoService.find(id);
 
-            if (found == null) {
+        if (found == null) {
 
-                Todo created = todoService.create(model);
-                // 201
-                return Response.status(Response.Status.CREATED)
-                        .entity("created")
-                        .header("Location", AppConst.TODO_PATH + "/" + created.getId()).build();
+            Todo created = todoService.create(model);
+            // 201
+            return Response.status(Response.Status.CREATED)
+                    .entity("created")
+                    .header(AppConst.HEADER_LOCATION, AppConst.TODO_PATH + "/" + created.getId()).build();
 
-            } else {
+        } else {
 
-                model.setId(id);
-                todoService.update(model);
-                // 200
-                return Response.status(Response.Status.OK)
-                        .entity("updated")
-                        .header("Location", AppConst.TODO_PATH + "/" + id).build();
+            model.setId(id);
+            todoService.update(model);
+            // 200
+            return Response.status(Response.Status.OK)
+                    .entity("updated")
+                    .header(AppConst.HEADER_LOCATION, AppConst.TODO_PATH + "/" + id).build();
 
-            }
-            
-        } catch (Exception e) {
-            logger.error(e.getMessage(), e);
-            throw e;
         }
 
     }
@@ -190,23 +148,15 @@ public class TodoResource {
     @Consumes({MediaType.APPLICATION_JSON})
     @Produces({MediaType.TEXT_HTML})
     public Response patch(@PathParam("id") String id, Todo model)
-            throws AppException, Exception {
-        
-        try {
-            
-            model.setId(id);
-            todoService.partialUpdate(model);
-            
-            // 200
-            return Response.status(Response.Status.OK)
-                    .entity("patched")
-                    .header("Location", AppConst.TODO_PATH + "/" + id).build();
-            
-        } catch (Exception e) {
-            logger.error(e.getMessage(), e);
-            throw e;
-        }
+            throws Exception {
 
+        model.setId(id);
+        todoService.partialUpdate(model);
+
+        // 200
+        return Response.status(Response.Status.OK)
+                .entity("patched")
+                .header(AppConst.HEADER_LOCATION, AppConst.TODO_PATH + "/" + id).build();
 
     }
 
@@ -214,17 +164,11 @@ public class TodoResource {
     @Path("{id}")
     @Produces({MediaType.TEXT_HTML})
     public Response delete(@PathParam("id") String id) throws Exception {
-        
-        try {
-            todoService.delete(id);
-            // 204
-            return Response.status(Response.Status.NO_CONTENT)
-                    .entity("deleted").build();
-            
-        } catch (Exception e) {
-            logger.error(e.getMessage(), e);
-            throw e;
-        }
+
+        todoService.delete(id);
+        // 204
+        return Response.status(Response.Status.NO_CONTENT)
+                .entity("deleted").build();
 
     }
 

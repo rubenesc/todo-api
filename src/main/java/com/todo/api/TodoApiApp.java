@@ -4,9 +4,9 @@
  */
 package com.todo.api;
 
-import com.todo.api.exceptions.AppExceptionMapper;
-import com.todo.api.exceptions.GenericExceptionMapper;
-import com.todo.api.exceptions.NotFoundExceptionMapper;
+import com.todo.api.exceptions.mappers.GenericExceptionMapper;
+import com.todo.api.exceptions.mappers.NotFoundExceptionMapper;
+import com.todo.api.exceptions.mappers.ValidationExceptionMapper;
 import com.todo.api.filters.CORSResponseFilter;
 import com.todo.api.filters.LoggingResponseFilter;
 import com.todo.api.resource.TodoResource;
@@ -29,21 +29,31 @@ public class TodoApiApp extends ResourceConfig {
 
         // register application resources
         register(TodoResource.class);
+        
+        registerFilters();
+        registerExceptionMappers();
+        registerFeatures();
 
-        // register filters
+    }
+    
+    // register exception mappers
+    private void registerExceptionMappers() {
+        register(GenericExceptionMapper.class);
+        register(NotFoundExceptionMapper.class);
+        register(ValidationExceptionMapper.class);
+    }
+
+    // register filters
+    private void registerFilters() {
         register(RequestContextFilter.class);
         register(LoggingResponseFilter.class);
         register(CORSResponseFilter.class);
+    }
 
-        // register exception mappers
-        register(GenericExceptionMapper.class);
-        register(AppExceptionMapper.class);
-        register(NotFoundExceptionMapper.class);
-
-        // register features
+    // register features
+    private void registerFeatures() {
         register(JacksonFeature.class);
         register(MultiPartFeature.class);
         register(EntityFilteringFeature.class);
-
     }
 }

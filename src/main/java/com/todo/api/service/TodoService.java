@@ -7,13 +7,11 @@ package com.todo.api.service;
 import com.todo.api.dao.TodoDao;
 import com.todo.api.dao.model.TodoEntity;
 import com.todo.api.domain.Todo;
-import com.todo.api.exceptions.AppException;
 import com.todo.api.exceptions.ValidationException;
 import com.twilio.sdk.TwilioRestException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import javax.ws.rs.NotFoundException;
 import javax.ws.rs.core.Response;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -65,7 +63,7 @@ public class TodoService {
     }
 
     public Todo find(String id) throws Exception {
-
+    
         TodoEntity entity = todoDao.find(id);
 
         validateFound(entity, id);
@@ -120,8 +118,6 @@ public class TodoService {
         
     }
     
-    
-
     public List<Todo> search(String query) throws Exception {
         
             List<TodoEntity> entities = searchService.searchTodos(query);
@@ -138,26 +134,26 @@ public class TodoService {
     }
 
     //validation
-    private void validateInputForCreation(Todo model) throws AppException {
+    private void validateInputForCreation(Todo model) throws ValidationException {
 
         if (StringUtils.isEmpty(model.getTitle())) {
-            throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(), 400, "Insufficiente Data, title required");
+            throw new ValidationException("Insufficiente Data, title required");
         }
 
     }
     
-    private void validateInputForUpdate(Todo model) throws AppException {
+    private void validateInputForUpdate(Todo model) throws ValidationException {
 
         if (StringUtils.isEmpty(model.getTitle())) {
-            throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(), 400, "Insufficiente Data, title required");
+            throw new ValidationException("Insufficiente Data, title required");
         }
 
     }
     
-    private void validateInputForPatch(TodoEntity entity) throws AppException {
+    private void validateInputForPatch(TodoEntity entity) throws ValidationException {
 
         if (StringUtils.isEmpty(entity.getTitle())) {
-            throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(), 400, "Insufficiente Data, title required");
+            throw new ValidationException("Insufficiente Data, title required");
         }
 
     }    
@@ -216,10 +212,10 @@ public class TodoService {
         }
     }
 
-    private void validateFound(TodoEntity entity, String id) throws AppException {
+    private void validateFound(TodoEntity entity, String id) throws NotFoundException {
+        
         if (entity == null) {
-            throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
-                    404, "The resource with id " + id + " was not found.");
+            throw new NotFoundException("The resource with id " + id + " was not found.");
         }
     }
 
