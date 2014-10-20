@@ -9,8 +9,6 @@ import com.todo.api.dao.model.TodoEntity;
 import com.todo.api.service.SearchService;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;

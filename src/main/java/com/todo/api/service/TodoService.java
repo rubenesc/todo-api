@@ -208,7 +208,9 @@ public class TodoService {
         
         if (entity.getDone() && (!before)){
             String msg = "Todo Completed: " + entity.getTitle();
+            logger.debug("xxxx going to send sms message");
             this.smsService.send(msg);
+            logger.debug("xxxx sent sms message");
         }
     }
 

@@ -5,6 +5,7 @@
 package com.todo.api.service;
 
 import com.todo.api.exceptions.ValidationException;
+import static com.todo.api.service.TodoService.logger;
 import java.util.List;
 
 import com.twilio.sdk.TwilioRestClient;
@@ -17,6 +18,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.http.NameValuePair;
 import org.apache.http.message.BasicNameValuePair;
 import org.slf4j.LoggerFactory;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 /**
@@ -42,16 +44,19 @@ public class SmsService {
         }
     }
 
+    @Async
     public void send(String body) throws TwilioRestException, ValidationException {
 
         send(defaultTo, defaultFrom, body);
     }
 
+    @Async
     public void send(String to, String body) throws TwilioRestException, ValidationException {
         send(to, defaultFrom, body);
     }
-
+    
     public void send(String to, String from, String body) throws ValidationException, TwilioRestException {
+            logger.debug("yyyy preparing");
 
         if (isEnabled()) {
 
