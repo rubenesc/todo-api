@@ -56,7 +56,6 @@ public class SmsService {
     }
     
     public void send(String to, String from, String body) throws ValidationException, TwilioRestException {
-            logger.debug("yyyy preparing");
 
         if (isEnabled()) {
 

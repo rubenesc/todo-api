@@ -45,7 +45,7 @@ public class TodoDaoTest {
     }
 
     @Test
-    public void daoOperations() {
+    public void tests() {
 
         this.create();
 

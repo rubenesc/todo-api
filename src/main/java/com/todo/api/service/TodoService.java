@@ -208,7 +208,7 @@ public class TodoService {
     private void isTaskDone(TodoEntity entity, boolean before) throws ValidationException, TwilioRestException {
         
         if (entity.getDone() && (!before)){
-            String msg = "Todo Completed: " + entity.getTitle();
+            String msg = entity.getTitle() + " task has been marked as done.";
             this.smsService.send(msg);
         }
     }

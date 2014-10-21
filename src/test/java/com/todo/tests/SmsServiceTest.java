@@ -32,7 +32,7 @@ public class SmsServiceTest {
     }
 
     @Test
-    public void test() throws Exception {
+    public void tests() throws Exception {
         
         if (smsService.isEnabled()){
             

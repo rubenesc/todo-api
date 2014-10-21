@@ -14,6 +14,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
@@ -26,6 +27,8 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 @ContextConfiguration({"classpath:test-applicationContext.xml"})
 public class SearchServiceTest {
 
+    final static org.slf4j.Logger logger = LoggerFactory.getLogger(SearchServiceTest.class);
+    
     @Autowired
     TodoDao todoDao;
     @Autowired
@@ -36,9 +39,13 @@ public class SearchServiceTest {
 
         if (searchService.isEnabled()) {
             this.cleanTodoDB();
-            searchService.deleteIndex();
-            searchService.createIndex();
 
+            boolean result = searchService.deleteIndex();
+            Assert.assertTrue("Did not delete index", result);
+
+            result = searchService.createIndex();
+            Assert.assertTrue("Did not create index", result);
+            
         }
 
     }
@@ -48,8 +55,8 @@ public class SearchServiceTest {
     }
 
     @Test
-    public void test() throws Exception {
-        
+    public void tests() throws Exception {
+
         if (searchService.isEnabled()) {
             testCrudOperatons();
             testIndexMultipleItems();
@@ -67,41 +74,23 @@ public class SearchServiceTest {
             result = searchService.index(item);
             Assert.assertTrue("faild to index document with id [" + item.getId() + "]", result);
         }
-
-        String query = "luctus";
+        
+        //there are 2 Cat Todo's in the Mock Data
+        String query = "cat";
         List<TodoEntity> list = searchService.searchTodos(query);
         Assert.assertNotNull(list);
-        System.out.println("testIndexMultipleItems ...");
-
-        System.out.println("Search Results [" + query + "][" + list.size() + "]: ");
-        for (TodoEntity item : list) {
-            System.out.println(item);
-        }
+        Assert.assertEquals("Should match search results", 2, list.size());
 
     }
 
     private void testCrudOperatons() throws Exception {
 
-        TodoEntity entity = new TodoEntity("Todo 1", "Description for todo #1");
+        TodoEntity entity = new TodoEntity("clean the carpet", "vacuum the carpet");
         this.create(entity);
 
         //create document
         boolean result = searchService.index(entity);
         Assert.assertTrue("faild to index document with id [" + entity.getId() + "]", result);
-
-//        String query = "luctus";
-//        List<TodoEntity> result = searchService.searchTodos(query);
-//        Assert.assertNotNull(result);
-////        Assert.assertTrue("find one item", result.size() == 1);
-//        result = searchService.searchTodos("");
-//        Assert.assertNotNull(result);
-//        
-//        System.out.println("testIndexOneItem ...");
-//        System.out.println("Search Results ["+query+"]["+result.size()+"]: ");
-//        for (TodoEntity item : result) {
-//            System.out.println(item);
-//        }
-
 
         //find document and should match
         TodoEntity found = searchService.findDocument(entity.getId());
@@ -137,11 +126,33 @@ public class SearchServiceTest {
     private void cleanTodoDB() {
         todoDao.deleteAll();
         long count = todoDao.count();
-        Assert.assertEquals ("Clean TODO table", 0, count);
+        Assert.assertEquals("Clean TODO table", 0, count);
     }
 
     private List<TodoEntity> buildMockData() {
+
         List<TodoEntity> items = new ArrayList<TodoEntity>();
+
+        items.add(new TodoEntity("walk the dog", "take fido to the park"));
+        items.add(new TodoEntity("feed the cat", "give him wet food at 8:00pm"));
+        items.add(new TodoEntity("buy milk", "2% low fat milk"));
+        items.add(new TodoEntity("pay the credit card", "It has to be paid before the 25th of each month"));
+        items.add(new TodoEntity("wash the dishes", "don't forget to wash the dishes before goig to bed"));
+        items.add(new TodoEntity("clean desk", "organize all the papers and books on your desk"));
+        items.add(new TodoEntity("dinner reservation", "make reservation at flower + water"));
+        items.add(new TodoEntity("pay Juan back", "pay Juan the money he lent you"));
+        items.add(new TodoEntity("call sister", "say hello and see how she's doing"));
+        items.add(new TodoEntity("buy flowers", "buy flowers for wife"));
+        items.add(new TodoEntity("change light bulb", "in the garage"));
+        items.add(new TodoEntity("plan vacations", "plan next trip"));
+        items.add(new TodoEntity("wash car", ""));
+        items.add(new TodoEntity("laundry", ""));
+        items.add(new TodoEntity("buy charger", "buy new phone carger"));
+        items.add(new TodoEntity("water plants", "water the garden plants"));
+        items.add(new TodoEntity("take cat to vet", "schedule an appointment with the vet"));
+        items.add(new TodoEntity("buy dog food", "to go petco and buy dog good"));
+
+        //gibberish todos
         items.add(new TodoEntity("sed magna at", "et magnis dis parturient"));
         items.add(new TodoEntity("dui proin", "pede malesuada in"));
         items.add(new TodoEntity("hac habitasse platea", "eget eleifend luctus"));
@@ -161,6 +172,7 @@ public class SearchServiceTest {
         items.add(new TodoEntity("eros vestibulum", "nisi volutpat eleifend donec ut"));
         items.add(new TodoEntity("diam nam tristique", "eleifend luctus ultricies eu nibh quisque"));
         items.add(new TodoEntity("erat nulla tempus", "mus vivamus vestibulum sagittis sapien"));
+
         return items;
     }
 }

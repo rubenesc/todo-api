@@ -29,6 +29,7 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
+import org.springframework.scheduling.annotation.Async;
 
 /**
  * /**
@@ -72,18 +73,23 @@ public class SearchService {
      *
      * @throws Exception
      */
-    public void createIndex() throws Exception {
+    public boolean createIndex() throws Exception {
 
         IndicesExists indicesExists = new IndicesExists.Builder(INDEX_TODOS).build();
         JestResult result = jestClient.execute(indicesExists);
-
+        
+        //if it doesn't exist create it.
         if (!result.isSucceeded()) {
             // Create todos index
             CreateIndex createIndex = new CreateIndex.Builder(INDEX_TODOS).build();
-            jestClient.execute(createIndex);
+            JestResult executeResult = jestClient.execute(createIndex);
+            return executeResult.isSucceeded();
         }
+        
+        return true;
     }
 
+    @Async
     public boolean index(TodoEntity item) throws Exception {
 
         try {
@@ -105,6 +111,7 @@ public class SearchService {
 
     }
 
+    @Async
     public boolean index(List<TodoEntity> items) throws Exception {
 
         try {
@@ -173,6 +180,7 @@ public class SearchService {
 
     }
 
+    @Async
     public boolean deleteDocument(String id) {
 
         try {
@@ -214,7 +222,7 @@ public class SearchService {
             return result.getSourceAsObjectList(TodoEntity.class);
 
         } catch (Exception e) {
-            logger.error("Search error", e);
+            logger.error(e.getMessage(), e);
         }
 
         return new ArrayList<TodoEntity>();
