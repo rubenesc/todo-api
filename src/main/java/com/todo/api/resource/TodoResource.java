@@ -4,9 +4,12 @@
  */
 package com.todo.api.resource;
 
+import com.todo.api.domain.ListOptions;
+import com.todo.api.domain.ListWrapper;
 import com.todo.api.resource.ext.PATCH;
 import com.todo.api.domain.Todo;
 import com.todo.api.filters.AppConst;
+import com.todo.api.helpers.TodoHelper;
 import com.todo.api.service.TodoService;
 import java.util.List;
 import javax.ws.rs.Consumes;
@@ -17,9 +20,10 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,9 +36,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 public class TodoResource {
 
     final static Logger logger = LoggerFactory.getLogger(TodoResource.class);
+
     @Autowired
     private TodoService todoService;
-
+        
     @POST
     @Consumes({MediaType.APPLICATION_JSON})
     @Produces({MediaType.TEXT_HTML})
@@ -50,17 +55,25 @@ public class TodoResource {
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public List<Todo> getItems() throws Exception {
-
-        List<Todo> items = todoService.find();
-        return items;
-
+    public ListWrapper<Todo> getItems(@Context UriInfo info) throws Exception {
+        
+        logger.info("[["+AppConst.PAG_DEFAULT_LIMIT+"]]");
+        logger.info("[["+AppConst.PAG_DEFAULT_LIMIT+"]]");
+        String p = info.getQueryParameters().getFirst("p");
+        String l = info.getQueryParameters().getFirst("l");
+        
+        ListOptions opts = TodoHelper.buildListOptions(p, l);
+       
+        return todoService.find(opts);
+        
     }
 
     @GET
     @Path("search")
     @Produces(MediaType.APPLICATION_JSON)
-    public List<Todo> search(@QueryParam("q") String query) throws Exception {
+    public List<Todo> search(@Context UriInfo info) throws Exception {
+
+        String query = info.getQueryParameters().getFirst("q");
 
         List<Todo> items = todoService.search(query);
         return items;

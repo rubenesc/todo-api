@@ -51,9 +51,9 @@
     <bean id="todoResource" class="com.todo.api.resource.TodoResource" >
     	<property name="todoService" ref="todoService"/>
     </bean>
-    
+        
     <bean id="todoService" class="com.todo.api.service.TodoService" >
-    	<property name="todoDao" ref="todoDao"/>
+        <property name="todoDao" ref="todoDao"/>
     </bean>       
     
     <bean id="searchService" class="com.todo.api.service.SearchService" >

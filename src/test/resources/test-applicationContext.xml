@@ -42,15 +42,15 @@
         <property name="port" value="${db.port}" />
     </bean>        
     <!--end Mongo DB -->
-    
+        
     <bean id="todoDao" class="com.todo.api.dao.TodoMongoDbDaoImpl">	
-        <constructor-arg name="mongoOps" ref="mongoTemplate"/>
+	<constructor-arg name="mongoOps" ref="mongoTemplate"/>
     </bean>
 
     <bean id="todoResource" class="com.todo.api.resource.TodoResource" >
-        <property name="todoService" ref="todoService"/>
+    	<property name="todoService" ref="todoService"/>
     </bean>
-    
+        
     <bean id="todoService" class="com.todo.api.service.TodoService" >
         <property name="todoDao" ref="todoDao"/>
     </bean>       

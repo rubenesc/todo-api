@@ -8,7 +8,9 @@ package com.todo.tests.integration;
 //import com.sun.jersey.api.client.WebResource;
 import com.todo.tests.integration.ext.RestOperations;
 import com.todo.api.dao.TodoDao;
+import com.todo.api.domain.ListWrapper;
 import com.todo.api.domain.Todo;
+import com.todo.api.filters.AppConst;
 import java.util.List;
 import org.junit.Before;
 
@@ -18,6 +20,7 @@ import org.apache.http.HttpResponse;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
@@ -30,8 +33,11 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 @ContextConfiguration({"classpath:test-applicationContext.xml"})
 public class TodoApiCrudIT extends RestOperations{
 
+    final static org.slf4j.Logger logger = LoggerFactory.getLogger(TodoApiCrudIT.class);
+    
     Todo model;
     int numCreate; //Numer of documents to create
+    
     @Autowired
     TodoDao todoDao;
 
@@ -48,7 +54,7 @@ public class TodoApiCrudIT extends RestOperations{
     @Test
     public void testTodoCrudOperations() throws Exception {
 
-        testGetAll();
+        testGetAll(AppConst.PAG_DEFAULT_LIMIT);
         
         testPost();
         testInvalidPost();
@@ -63,7 +69,7 @@ public class TodoApiCrudIT extends RestOperations{
 
         //create multiple documents
         testPostMultiple();
-        testGetAll();
+        testGetAll(5);
 
         //test search
         testSearch();
@@ -131,14 +137,37 @@ public class TodoApiCrudIT extends RestOperations{
         return items;
     }
 
-    private List<Todo> testGetAll() throws Exception {
+    private void testGetAll(int pageLimit) throws Exception {
+        
+        int counter = 0;
+        long totalDocuments = todoDao.count();        
+        int totalPages = (int) Math.ceil((double)totalDocuments / pageLimit);
+        
+        for (int page = 1; page <= totalPages; page++) {
+            
+            
+            Response response = get(TODO_API_URL+"?p="+page+"&l="+pageLimit);
+            Assert.assertEquals(200, response.getStatus());
+            ListWrapper<Todo> listWrapper = response.readEntity(new GenericType<ListWrapper<Todo>>() {
+            });            
+            
+            Assert.assertEquals(totalDocuments, listWrapper.getTotal());
 
-        Response response = get(TODO_API_URL);
-        Assert.assertEquals(200, response.getStatus());
-        List<Todo> items = response.readEntity(new GenericType<List<Todo>>() {
-        });
+            List<Todo> items = listWrapper.getItems();
+            
+            for (Todo item : items) {
+                logger.info("item [" + item + "]");
+                counter++;
+            }
+            
+        }
 
-        return items;
+        Assert.assertEquals("Did not paginate all items", totalDocuments, counter);
+        
+        
+        
+
+        
     }
 
     private void testInvalidPost() {

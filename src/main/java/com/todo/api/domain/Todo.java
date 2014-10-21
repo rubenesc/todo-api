@@ -71,4 +71,10 @@ public class Todo {
     public void setDone(Boolean done) {
         this.done = done;
     }
+
+    @Override
+    public String toString() {
+        return "Todo{" + "id=" + id + ", title=" + title + ", description=" + description + ", done=" + done + '}';
+    }
+    
 }

@@ -136,8 +136,8 @@ public class SearchServiceTest {
 
     private void cleanTodoDB() {
         todoDao.deleteAll();
-        List<TodoEntity> items = todoDao.find();
-        Assert.assertTrue("Clean TODO table", items.size() == 0);
+        long count = todoDao.count();
+        Assert.assertEquals ("Clean TODO table", 0, count);
     }
 
     private List<TodoEntity> buildMockData() {

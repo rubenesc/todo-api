@@ -6,13 +6,14 @@ package com.todo.api.service;
 
 import com.todo.api.dao.TodoDao;
 import com.todo.api.dao.model.TodoEntity;
+import com.todo.api.domain.ListOptions;
+import com.todo.api.domain.ListWrapper;
 import com.todo.api.domain.Todo;
 import com.todo.api.exceptions.ValidationException;
+import com.todo.api.helpers.TodoHelper;
 import com.twilio.sdk.TwilioRestException;
-import java.util.ArrayList;
 import java.util.List;
 import javax.ws.rs.NotFoundException;
-import javax.ws.rs.core.Response;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -35,7 +36,7 @@ public class TodoService {
     
     @Autowired
     SmsService smsService;  
-    
+        
     public Todo create(Todo model) throws Exception {
         
         validateInputForCreation(model);
@@ -54,11 +55,23 @@ public class TodoService {
     }
 
 
-    public List<Todo> find() throws Exception {
+    public ListWrapper<Todo> find(ListOptions opts) throws Exception {
+
+        TodoHelper.validateListOptions(opts);
         
-        List<TodoEntity> entities = todoDao.find();
-        List<Todo> models = convertEntitiesToModels(entities);
-        return models;
+        List<TodoEntity> entities = todoDao.find(opts);
+
+        long count = todoDao.count();
+        
+        List<Todo> models = TodoHelper.convertEntitiesToModels(entities);
+        
+        ListWrapper<Todo> listWrapper = new ListWrapper<Todo>();
+        listWrapper.setItems(models);
+        listWrapper.setPage(opts.getPage());
+        listWrapper.setLimit(opts.getLimit());
+        listWrapper.setTotal(count);
+        
+        return listWrapper;
         
     }
 
@@ -122,16 +135,12 @@ public class TodoService {
         
             List<TodoEntity> entities = searchService.searchTodos(query);
 
-            List<Todo> models = convertEntitiesToModels(entities);
+            List<Todo> models = TodoHelper.convertEntitiesToModels(entities);
             return models;
         
     }    
     
     
-    //Spring DI 
-    public void setTodoDao(TodoDao todoDao) {
-        this.todoDao = todoDao;
-    }
 
     //validation
     private void validateInputForCreation(Todo model) throws ValidationException {
@@ -159,14 +168,6 @@ public class TodoService {
     }    
     
     //Helper Methods
-    private List<Todo> convertEntitiesToModels(List<TodoEntity> entities) throws Exception {
-        List<Todo> response = new ArrayList<Todo>();
-        for (TodoEntity entity : entities) {
-            response.add(new Todo(entity));
-        }
-
-        return response;
-    }
 
 
     private void updateAttributes(TodoEntity entity, Todo model) {
@@ -208,9 +209,7 @@ public class TodoService {
         
         if (entity.getDone() && (!before)){
             String msg = "Todo Completed: " + entity.getTitle();
-            logger.debug("xxxx going to send sms message");
             this.smsService.send(msg);
-            logger.debug("xxxx sent sms message");
         }
     }
 
@@ -221,4 +220,10 @@ public class TodoService {
         }
     }
 
+    
+    //Spring DI 
+    public void setTodoDao(TodoDao todoDao) {
+        this.todoDao = todoDao;
+    }
+    
 }

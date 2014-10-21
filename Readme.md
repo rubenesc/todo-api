@@ -15,17 +15,17 @@ Application that exposes a series of REST services to manage a "Todo List". The 
 
 ###API's
 
-Method | URI                  | Resource       | Example
------- | ---------------------|----------------|----------
-POST   | /v1/todo             | create todo    | curl -i -X POST -H 'Content-Type: application/json' -d '{"title":"Todo Title", "description":"Todo Desc", "done": false}' http://localhost:8080/todo-api/v1/todo
-GET    | /v1/todo             | list todos     | curl -i -X GET -H 'Content-Type: application/json' http://localhost:8080/todo-api/v1/todo
-GET    | /v1/todo/{id}        | find a todo    | curl -i -X GET -H 'Content-Type: application/json' http://localhost:8080/todo-api/v1/todo/543ec1eb0364f8ca5dd372af
-GET    | /v1/todo/search      | search todos   | curl -i -X GET -H 'Content-Type: application/json' http://localhost:8080/todo-api/v1/todo/search?q=cat
-GET    | /v1/todo/{id}/done   | mark done      | curl -i -X GET -H 'Content-Type: application/json' http://localhost:8080/todo-api/v1/todo/543ec1eb0364f8ca5dd372af/done
-GET    | /v1/todo/{id}/undone | mark undone    | curl -i -X GET -H 'Content-Type: application/json' http://localhost:8080/todo-api/v1/todo/543ec1eb0364f8ca5dd372af/undone
-PUT    | /v1/todo/{id}        | update a todo  | curl -i -X PUT -H 'Content-Type: application/json' -d '{"title":"Todo Title update", "description":"Todo Desc update", "done": true}' http://localhost:8080/todo-api/v1/todo/543ec1eb0364f8ca5dd372af
-PATCH  | /v1/todo/{id}        | partial update | curl -i -X PATCH -H 'Content-Type: application/json' -d '{"title":"Todo Title update"}' http://localhost:8080/todo-api/v1/todo/543ec1eb0364f8ca5dd372af
-DELETE | /v1/todo/{id}        | delete a todo  | curl -i -X DELETE -H 'Content-Type: application/json' http://localhost:8080/todo-api/v1/todo/543ec1eb0364f8ca5dd372af
+Method | URI                        | Resource       | Example
+------ | ---------------------------|----------------|----------
+POST   | /v1/todo                   | create todo    | curl -i -X POST -H 'Content-Type: application/json' -d '{"title":"Todo Title", "description":"Todo Desc", "done": false}' http://localhost:8080/todo-api/v1/todo
+GET    | /v1/todo?p={page}&l={limit}| list todos     | curl -i -X GET -H 'Content-Type: application/json' http://localhost:8080/todo-api/v1/todo?p=1
+GET    | /v1/todo/{id}              | find a todo    | curl -i -X GET -H 'Content-Type: application/json' http://localhost:8080/todo-api/v1/todo/543ec1eb0364f8ca5dd372af
+GET    | /v1/todo/search?q={query}  | search todos   | curl -i -X GET -H 'Content-Type: application/json' http://localhost:8080/todo-api/v1/todo/search?q=cat
+GET    | /v1/todo/{id}/done         | mark done      | curl -i -X GET -H 'Content-Type: application/json' http://localhost:8080/todo-api/v1/todo/543ec1eb0364f8ca5dd372af/done
+GET    | /v1/todo/{id}/undone       | mark undone    | curl -i -X GET -H 'Content-Type: application/json' http://localhost:8080/todo-api/v1/todo/543ec1eb0364f8ca5dd372af/undone
+PUT    | /v1/todo/{id}              | update a todo  | curl -i -X PUT -H 'Content-Type: application/json' -d '{"title":"Todo Title update", "description":"Todo Desc update", "done": true}' http://localhost:8080/todo-api/v1/todo/543ec1eb0364f8ca5dd372af
+PATCH  | /v1/todo/{id}              | partial update | curl -i -X PATCH -H 'Content-Type: application/json' -d '{"title":"Todo Title update"}' http://localhost:8080/todo-api/v1/todo/543ec1eb0364f8ca5dd372af
+DELETE | /v1/todo/{id}              | delete a todo  | curl -i -X DELETE -H 'Content-Type: application/json' http://localhost:8080/todo-api/v1/todo/543ec1eb0364f8ca5dd372af
 
 
 ###Tests

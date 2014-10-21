@@ -5,6 +5,7 @@
 package com.todo.api.dao;
 
 import com.todo.api.dao.model.TodoEntity;
+import com.todo.api.domain.ListOptions;
 import java.util.List;
 
 /**
@@ -17,7 +18,7 @@ public interface TodoDao {
     public void create(TodoEntity item);
 
     //retrieve
-    public List<TodoEntity> find();
+    public List<TodoEntity> find(ListOptions listOptions);
 
     public TodoEntity find(String id);
 
@@ -28,5 +29,7 @@ public interface TodoDao {
     public int delete(String id);
     
     public int deleteAll();
+
+    public long count();
     
 }
