@@ -34,7 +34,7 @@ import org.springframework.beans.factory.annotation.Autowired;
  */
 @Path("/v1/todo")
 public class TodoResource {
-
+    
     final static Logger logger = LoggerFactory.getLogger(TodoResource.class);
 
     @Autowired
