@@ -8,6 +8,17 @@ Application that exposes a series of REST services to manage a "Todo List". The 
 ###Live Demo
 
 	http://blooming-forest-7969.herokuapp.com/v1/todo
+	
+	#list items, by default it lists 10 items per page
+	http://blooming-forest-7969.herokuapp.com/v1/todo?p=1
+	http://blooming-forest-7969.herokuapp.com/v1/todo?p=2
+	
+	#limit the items per page
+	http://blooming-forest-7969.herokuapp.com/v1/todo?p=1&l=40
+	
+	#search
+	http://blooming-forest-7969.herokuapp.com/v1/todo/search?q=cat	
+	
 
 ###Stack
 
@@ -54,8 +65,3 @@ Run Integration tests aimed at the CRUD operations of the Rest API
 ```
 
 Test: http://localhost:8080/todo-api/v1/todo
-
-
-
-
-
