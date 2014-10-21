@@ -15,6 +15,7 @@ import java.util.List;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
+import javax.ws.rs.HEAD;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
@@ -34,12 +35,11 @@ import org.springframework.beans.factory.annotation.Autowired;
  */
 @Path("/v1/todo")
 public class TodoResource {
-    
-    final static Logger logger = LoggerFactory.getLogger(TodoResource.class);
 
+    final static Logger logger = LoggerFactory.getLogger(TodoResource.class);
     @Autowired
     private TodoService todoService;
-        
+
     @POST
     @Consumes({MediaType.APPLICATION_JSON})
     @Produces({MediaType.TEXT_HTML})
@@ -56,16 +56,16 @@ public class TodoResource {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public ListWrapper<Todo> getItems(@Context UriInfo info) throws Exception {
-        
-        logger.info("[["+AppConst.PAG_DEFAULT_LIMIT+"]]");
-        logger.info("[["+AppConst.PAG_DEFAULT_LIMIT+"]]");
+
+        logger.info("[[" + AppConst.PAG_DEFAULT_LIMIT + "]]");
+        logger.info("[[" + AppConst.PAG_DEFAULT_LIMIT + "]]");
         String p = info.getQueryParameters().getFirst("p");
         String l = info.getQueryParameters().getFirst("l");
-        
+
         ListOptions opts = TodoHelper.buildListOptions(p, l);
-       
+
         return todoService.find(opts);
-        
+
     }
 
     @GET
@@ -88,6 +88,19 @@ public class TodoResource {
         Todo item = todoService.find(id);
         return item;
 
+    }
+
+    @HEAD
+    @Path("{id}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response getItemHeaders(@PathParam("id") String id,
+            @Context UriInfo uriInfo) throws Exception {
+
+        Todo item = todoService.find(id);
+
+        Response.ResponseBuilder builder = Response.ok();
+        builder.type(MediaType.APPLICATION_JSON);
+        return builder.build();
     }
 
     @GET

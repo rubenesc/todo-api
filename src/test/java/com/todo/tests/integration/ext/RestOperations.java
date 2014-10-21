@@ -21,7 +21,6 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.jackson.JacksonFeature;
-import org.junit.Assert;
 
 /**
  * 
@@ -34,6 +33,7 @@ public class RestOperations {
     Client client;
     public  String BASE_URL = "http://localhost:8080";
     public  String TODO_API_URL;
+    public static final String CONTENT_TYPE = "Content-type";
 
     public void init() {
 
@@ -56,7 +56,7 @@ public class RestOperations {
         WebTarget webTarget = client.target(TODO_API_URL);
 
         Invocation.Builder request = webTarget.request();
-        request.header("Content-type", MediaType.APPLICATION_JSON);
+        request.header(CONTENT_TYPE, MediaType.APPLICATION_JSON);
 
         Response response = request.post(Entity.entity(item, MediaType.APPLICATION_JSON));
         return response;
@@ -75,12 +75,26 @@ public class RestOperations {
         WebTarget webTarget = client.target(url);
 
         Invocation.Builder request = webTarget.request();
-        request.header("Content-type", MediaType.APPLICATION_JSON);
+        request.header(CONTENT_TYPE, MediaType.APPLICATION_JSON);
 
         Response response = request.get();
         return response;
         
     }
+    
+    //HEAD
+    public Response head(String url){
+    
+        WebTarget webTarget = client.target(url);
+
+        Invocation.Builder request = webTarget.request();
+        request.header(CONTENT_TYPE, MediaType.APPLICATION_JSON);
+
+        Response response = request.head();
+        return response;
+        
+    }
+    
     
     //UPDATE
     public Response update(Todo item) {
@@ -88,7 +102,7 @@ public class RestOperations {
         WebTarget webTarget = client.target(TODO_API_URL + "/" + item.getId());
 
         Invocation.Builder request = webTarget.request();
-        request.header("Content-type", MediaType.APPLICATION_JSON);
+        request.header(CONTENT_TYPE, MediaType.APPLICATION_JSON);
 
         Response response = request.put(Entity.entity(item, MediaType.APPLICATION_JSON));
         return response;
@@ -121,7 +135,7 @@ public class RestOperations {
         WebTarget webTarget = client.target(TODO_API_URL + "/" + item.getId());
 
         Invocation.Builder request = webTarget.request();
-        request.header("Content-type", MediaType.APPLICATION_JSON);
+        request.header(CONTENT_TYPE, MediaType.APPLICATION_JSON);
 
         Response response = request.delete();
         

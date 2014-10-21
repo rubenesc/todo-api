@@ -12,9 +12,11 @@ import com.todo.api.domain.ListWrapper;
 import com.todo.api.domain.Todo;
 import com.todo.api.filters.AppConst;
 import java.util.List;
+import java.util.Map;
 import org.junit.Before;
 
 import javax.ws.rs.core.GenericType;
+import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import org.apache.http.HttpResponse;
 import org.junit.Assert;
@@ -31,13 +33,11 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration({"classpath:test-applicationContext.xml"})
-public class TodoApiCrudIT extends RestOperations{
+public class TodoApiCrudIT extends RestOperations {
 
     final static org.slf4j.Logger logger = LoggerFactory.getLogger(TodoApiCrudIT.class);
-    
     Todo model;
     int numCreate; //Numer of documents to create
-    
     @Autowired
     TodoDao todoDao;
 
@@ -55,16 +55,18 @@ public class TodoApiCrudIT extends RestOperations{
     public void tests() throws Exception {
 
         testGetAll(AppConst.PAG_DEFAULT_LIMIT);
-        
+
         testPost();
         testInvalidPost();
-        
+
+        testHead();
+
         testUpdate();
         testInvalidUpdate();
-        
+
         testPatchDone();
         testInvalidPatch();
-        
+
         testDelete();
 
         //create multiple documents
@@ -77,29 +79,27 @@ public class TodoApiCrudIT extends RestOperations{
         //test mark done/undone 
         testStatus();
         testInvalidStatus();
-        
+
         testBadRequest();
     }
 
-    private void testBadRequest(){
-        
+    private void testBadRequest() {
+
         //create empty todo
         Todo item = new Todo();
         Response response = post(item);
-        
+
         //expect 400 - Malformed message
         Assert.assertEquals(400, response.getStatus());
-        
+
     }
-    
-    
+
     private void testInvalidStatus() throws Exception {
         String id = "A1B2C3D4E5F6G7";
         Response response = this.markDone(id);
         Assert.assertEquals(404, response.getStatus()); //Not found
     }
-        
-    
+
     private void testStatus() throws Exception {
 
         //create new item
@@ -113,7 +113,7 @@ public class TodoApiCrudIT extends RestOperations{
         //verify
         item = this.getById(item.getId());
         Assert.assertTrue(item.getDone());
-        
+
         //mark as undone.
         response = this.markUndone(item.getId());
         Assert.assertEquals(200, response.getStatus());
@@ -128,9 +128,9 @@ public class TodoApiCrudIT extends RestOperations{
 
         String query = "2";
         Response response = get(TODO_API_URL + "/search?q=" + query);
-        
+
         Assert.assertEquals(200, response.getStatus());
-        
+
         List<Todo> items = response.readEntity(new GenericType<List<Todo>>() {
         });
 
@@ -138,66 +138,88 @@ public class TodoApiCrudIT extends RestOperations{
     }
 
     private void testGetAll(int pageLimit) throws Exception {
-        
+
         int counter = 0;
-        long totalDocuments = todoDao.count();        
-        int totalPages = (int) Math.ceil((double)totalDocuments / pageLimit);
-        
+        long totalDocuments = todoDao.count();
+        int totalPages = (int) Math.ceil((double) totalDocuments / pageLimit);
+
         for (int page = 1; page <= totalPages; page++) {
-            
-            
-            Response response = get(TODO_API_URL+"?p="+page+"&l="+pageLimit);
+
+
+            Response response = get(TODO_API_URL + "?p=" + page + "&l=" + pageLimit);
             Assert.assertEquals(200, response.getStatus());
             ListWrapper<Todo> listWrapper = response.readEntity(new GenericType<ListWrapper<Todo>>() {
-            });            
-            
+            });
+
             Assert.assertEquals(totalDocuments, listWrapper.getTotal());
 
             List<Todo> items = listWrapper.getItems();
-            
+
             for (Todo item : items) {
                 logger.info("item [" + item + "]");
                 counter++;
             }
-            
+
         }
 
         Assert.assertEquals("Did not paginate all items", totalDocuments, counter);
-        
-        
-        
 
+    }
+
+    private void testHead() {
+        
+        String url = TODO_API_URL + "/" + this.model.getId();
+        Response responseHead = head(url);
+        Assert.assertEquals(200, responseHead.getStatus());
+
+        Response responseGet = get(url);
+        Assert.assertEquals(200, responseGet.getStatus());
+        
+        
+        //get Headers and validate that they match
+        MultivaluedMap<String, Object> getHeaders = responseGet.getHeaders();
+        MultivaluedMap<String, Object> headHeaders = responseHead.getHeaders();
+        
+        for (Map.Entry<String, List<Object>> entry : getHeaders.entrySet()) {
+            String key = entry.getKey();
+           
+            List<Object> getValues = entry.getValue();
+            List<Object> headValues = headHeaders.get(key);
+            
+            if (key.equalsIgnoreCase("Content-Length")){
+                Assert.assertEquals("Head should have no Content-Length", "0", headValues.get(0));
+            } else {
+                Assert.assertArrayEquals("Invalid header for key ["+ key +"]",getValues.toArray(), headValues.toArray());
+            }
+        }
         
     }
 
     private void testInvalidPost() {
-        
+
         Todo item = new Todo();
         Response response = post(item);
 
         Assert.assertEquals(400, response.getStatus()); //Bad request
     }
-    
-    
+
     private Todo testPost() throws Exception {
 
         Todo found = this.testPost(this.model);
         this.model = found;
-        
+
         return found;
     }
-    
+
     private Todo testPost(Todo model) throws Exception {
-        
+
         //create item
         Response responsePost = post(model);
         Assert.assertEquals(201, responsePost.getStatus());
         Assert.assertNotNull("Missing location on POST response", responsePost.getLocation());
-//        Todo created = responsePost.readEntity(Todo.class);
-//        verifyItemMatch(model, created);        
-        
+
         String location = responsePost.getLocation().toString();
-        
+
         //find it and verify
         Response responseGet = get(location);
         Assert.assertEquals(200, responseGet.getStatus());
@@ -206,16 +228,15 @@ public class TodoApiCrudIT extends RestOperations{
 
         return foundGet;
     }
-    
+
     private void testInvalidUpdate() {
-        
+
         Todo item = new Todo("some title", "some description", true);
         item.setId("123456");
-        
+
         Response response = update(item);
         Assert.assertEquals(404, response.getStatus()); //Not found
     }
-    
 
     private Todo testUpdate() throws Exception {
 
@@ -228,7 +249,7 @@ public class TodoApiCrudIT extends RestOperations{
     }
 
     private Todo testUpdate(Todo model) throws Exception {
-        
+
         //update item
         Response response = update(model);
         Assert.assertEquals(200, response.getStatus());
@@ -239,16 +260,15 @@ public class TodoApiCrudIT extends RestOperations{
 
         return found;
     }
-    
+
     private void testInvalidPatch() throws Exception {
-        
+
         Todo item = new Todo("some title", "some description", true);
         item.setId("123456");
-        
+
         HttpResponse response = patch(item);
         Assert.assertEquals(404, response.getStatusLine().getStatusCode()); //Not found
     }
-    
 
     private Todo testPatchDone() throws Exception {
 
@@ -262,11 +282,11 @@ public class TodoApiCrudIT extends RestOperations{
     }
 
     private Todo testPatchDone(Todo todoPatch, Todo todo) throws Exception {
-        
+
         HttpResponse response = patch(todoPatch);
-        
+
         Assert.assertEquals(200, response.getStatusLine().getStatusCode());
-        
+
         Todo found = getById(todo.getId());
 
         Assert.assertNotNull(found);
@@ -283,14 +303,14 @@ public class TodoApiCrudIT extends RestOperations{
     }
 
     private void testDelete(String id) throws Exception {
-        
+
         //find an item
         Todo found = getById(id);
 
         //delete it
         Response response = delete(found);
         Assert.assertEquals(204, response.getStatus());
-        
+
         //make sure it doesn't exist anymore
         response = get(TODO_API_URL + "/" + found.getId());
         Assert.assertEquals(404, response.getStatus());
@@ -327,7 +347,7 @@ public class TodoApiCrudIT extends RestOperations{
         Todo found = response.readEntity(Todo.class);
 
         return found;
-        
+
     }
 
     private void verifyItemMatch(Todo expected, Todo actual) {
@@ -336,5 +356,4 @@ public class TodoApiCrudIT extends RestOperations{
         Assert.assertEquals(expected.getDescription(), actual.getDescription());
         Assert.assertEquals(expected.getDone(), actual.getDone());
     }
-
 }

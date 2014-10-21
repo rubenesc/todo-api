@@ -49,8 +49,12 @@ public class SearchService {
 
     @PostConstruct
     public void initialize() throws Exception {
-        initClient();
-        createIndex();
+        
+        if (isEnabled()){
+            initClient();
+            createIndex();
+        }
+        
     }
 
     public boolean deleteIndex() {
@@ -272,6 +276,7 @@ public class SearchService {
      * Initialize Jest Client
      */
     private void initClient() {
+        
         if (jestClient == null) {
             try {
                 jestClient = jestClient();
