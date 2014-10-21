@@ -52,7 +52,7 @@ public class TodoApiCrudIT extends RestOperations{
     }
 
     @Test
-    public void testTodoCrudOperations() throws Exception {
+    public void tests() throws Exception {
 
         testGetAll(AppConst.PAG_DEFAULT_LIMIT);
         
