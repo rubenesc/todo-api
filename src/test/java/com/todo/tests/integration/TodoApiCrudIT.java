@@ -11,8 +11,10 @@ import com.todo.api.dao.TodoDao;
 import com.todo.api.domain.ListWrapper;
 import com.todo.api.domain.Todo;
 import com.todo.api.filters.AppConst;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import javax.ws.rs.core.EntityTag;
 import org.junit.Before;
 
 import javax.ws.rs.core.GenericType;
@@ -68,7 +70,7 @@ public class TodoApiCrudIT extends RestOperations {
         testInvalidPatch();
 
         testDelete();
-
+                
         //create multiple documents
         testPostMultiple();
         testGetAll(5);
@@ -81,6 +83,9 @@ public class TodoApiCrudIT extends RestOperations {
         testInvalidStatus();
 
         testBadRequest();
+        
+        //tests with ETag
+        testConditionalGet();        
     }
 
     private void testBadRequest() {
@@ -166,33 +171,64 @@ public class TodoApiCrudIT extends RestOperations {
 
     }
 
-    private void testHead() {
+    private void testConditionalGet() {
         
+        //create a new resource;
+        Todo item = new Todo("test GET with an ETag");
+        Response postResponse = post(item);
+        Assert.assertEquals(201, postResponse.getStatus());
+        
+        //ask for the resource
+        String url = postResponse.getLocation().toString();
+        Response response = get(url);
+        Assert.assertEquals(200, response.getStatus());
+
+        //get it's eTag
+        EntityTag etag = response.getEntityTag();
+        Assert.assertNotNull("GET request should return an eTag", etag);
+
+        //ask for a Conditional resource with an eTag
+        Map<String, String> headers = new HashMap<String, String>();
+        headers.put("If-None-Match", etag.toString());
+        response = get(url, headers);
+        Assert.assertEquals(304, response.getStatus());
+        
+        //if the resource hasn't changed, no data should be returned
+        Object contentLength = response.getHeaders().getFirst("Content-Length");
+        Assert.assertTrue("304 should have no Content-Length", (contentLength == null || contentLength.equals("0")) );
+        
+        response.close();
+    }
+
+    private void testHead() {
+
         String url = TODO_API_URL + "/" + this.model.getId();
         Response responseHead = head(url);
         Assert.assertEquals(200, responseHead.getStatus());
 
         Response responseGet = get(url);
         Assert.assertEquals(200, responseGet.getStatus());
-        
-        
+
         //get Headers and validate that they match
         MultivaluedMap<String, Object> getHeaders = responseGet.getHeaders();
         MultivaluedMap<String, Object> headHeaders = responseHead.getHeaders();
-        
+
         for (Map.Entry<String, List<Object>> entry : getHeaders.entrySet()) {
             String key = entry.getKey();
-           
+
             List<Object> getValues = entry.getValue();
             List<Object> headValues = headHeaders.get(key);
             
-            if (key.equalsIgnoreCase("Content-Length")){
-                Assert.assertEquals("Head should have no Content-Length", "0", headValues.get(0));
+            if (key.equalsIgnoreCase("Content-Length")) {
+                Object contentLength = headValues.get(0);
+                Assert.assertTrue("Head should have no Content-Length", (contentLength == null || contentLength.equals("0")) );
+                
             } else {
-                Assert.assertArrayEquals("Invalid header for key ["+ key +"]",getValues.toArray(), headValues.toArray());
+                Assert.assertNotNull("Head should contain [" + key + "] header", headValues);
+                Assert.assertArrayEquals("Invalid header for key [" + key + "]", getValues.toArray(), headValues.toArray());
             }
         }
-        
+
     }
 
     private void testInvalidPost() {

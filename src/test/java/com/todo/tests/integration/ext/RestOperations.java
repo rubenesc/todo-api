@@ -7,6 +7,7 @@ package com.todo.tests.integration.ext;
 import com.google.gson.Gson;
 import com.todo.api.domain.Todo;
 import com.todo.api.filters.AppConst;
+import java.util.Map;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
@@ -65,22 +66,33 @@ public class RestOperations {
     
     //GET
     public Response get(){
-        
         return get(TODO_API_URL);
-        
     }
 
     public Response get(String url){
+        return get(url, null);
+    }
+    
+    public Response get(String url, Map<String, String> headers){
     
         WebTarget webTarget = client.target(url);
 
         Invocation.Builder request = webTarget.request();
         request.header(CONTENT_TYPE, MediaType.APPLICATION_JSON);
+        
+        if (headers != null){
+            for (Map.Entry<String, String> entry : headers.entrySet()) {
+                String key = entry.getKey();
+                request.header(entry.getKey(), entry.getValue());
+            }
+        }
 
         Response response = request.get();
         return response;
         
     }
+    
+    
     
     //HEAD
     public Response head(String url){

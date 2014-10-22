@@ -100,8 +100,12 @@ public class Todo {
     @Override
     public int hashCode() {
         int hash = 7;
-        hash = 89 * hash + (this.id != null ? this.id.hashCode() : 0);
-        hash = 89 * hash + (this.title != null ? this.title.hashCode() : 0);
+        hash = 61 * hash + (this.id != null ? this.id.hashCode() : 0);
+        hash = 61 * hash + (this.title != null ? this.title.hashCode() : 0);
+        hash = 61 * hash + (this.description != null ? this.description.hashCode() : 0);
+        hash = 61 * hash + (this.done != null ? this.done.hashCode() : 0);
+        hash = 61 * hash + (this.created != null ? this.created.hashCode() : 0);
+        hash = 61 * hash + (this.modified != null ? this.modified.hashCode() : 0);
         return hash;
     }
 
