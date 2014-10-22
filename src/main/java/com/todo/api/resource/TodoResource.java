@@ -29,6 +29,7 @@ import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.UriInfo;
+import org.glassfish.jersey.message.internal.HeaderValueException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -95,7 +96,7 @@ public class TodoResource {
     @Path("{id}")
     @Consumes({MediaType.APPLICATION_JSON})
     @Produces({MediaType.TEXT_HTML})
-    public Response update(@PathParam("id") String id, @Context Request request, Todo model)
+    public Response update(@PathParam("id") String id, Todo model, @Context Request request)
             throws Exception {
 
         Todo found = todoService.find(id);
@@ -110,16 +111,13 @@ public class TodoResource {
                     .header(AppConst.HEADER_LOCATION, AppConst.TODO_PATH + "/" + created.getId()).build();
 
         } else {
-
-            //update 
-            EntityTag eTag = new EntityTag(Integer.toString(found.hashCode()));
-
-            //verify request contains an If-None-Match header with a valid ETAG
-            ResponseBuilder builder = request.evaluatePreconditions(eTag);
-            if (builder != null) {
-                // Preconditions not met!
+            
+            
+            //if a conditional update was sent, validate it
+            ResponseBuilder builder = validateConditionalUpdate(found, request);
+            if (builder != null){
                 return builder.build();
-            }
+            } 
 
             model.setId(id);
             todoService.update(model);
@@ -136,8 +134,16 @@ public class TodoResource {
     @Path("{id}")
     @Consumes({MediaType.APPLICATION_JSON})
     @Produces({MediaType.TEXT_HTML})
-    public Response patch(@PathParam("id") String id, Todo model)
+    public Response patch(@PathParam("id") String id, Todo model, @Context Request request)
             throws Exception {
+        
+        Todo found = todoService.find(id);
+        
+        //if a conditional update was sent, validate it
+        ResponseBuilder builder = validateConditionalUpdate(found, request);
+        if (builder != null){
+            return builder.build();
+        } 
 
         model.setId(id);
         todoService.partialUpdate(model);
@@ -192,27 +198,22 @@ public class TodoResource {
 
         Todo item = todoService.find(id);
 
-        EntityTag eTag = new EntityTag(Integer.toString(item.hashCode()));
+        CacheControl cacheControl = new CacheControl();
+        cacheControl.setMaxAge(1000);
 
-        CacheControl cc = new CacheControl();
-        cc.setMaxAge(1000);
-
-        //verify request contains an If-None-Match header with a valid ETAG
-        ResponseBuilder builder = request.evaluatePreconditions(eTag);
-        if (builder != null) {
-            //304, Found valid ETag, Resource has not changed.
-            builder.cacheControl(cc); // reset the client’s cache expiration
+        //if a conditional GET was sent, validate it
+        ResponseBuilder builder = validateConditionalGet(item, request);
+        if (builder != null){
+            builder.cacheControl(cacheControl); // reset the client’s cache expiration
             return builder.build();
-        }
-
+        } 
+        
         //200 build response
-        if (returnBody) {
-            builder = Response.ok(item, MediaType.APPLICATION_JSON);
-        } else {
-            builder = Response.ok();
-        }
-        builder.cacheControl(cc);
-        builder.tag(eTag);
+        builder = (returnBody) ? Response.ok(item, MediaType.APPLICATION_JSON) :
+                Response.ok();
+        
+        builder.cacheControl(cacheControl);
+        builder.tag(new EntityTag(Integer.toString(item.hashCode()))); 
         return builder.build();
     }
 
@@ -245,8 +246,92 @@ public class TodoResource {
         return builder.build();
     }
     
+    /**
+     * Conditional GET
+     * 
+     * Validates if an 'If-None-Match' header comes in the request, then it's value
+     * must match the value of the current resource eTag. 
+     * 
+     * Example Request: 
+     * GET /v1/todo/123 HTTP/1.1 
+     * If-None-Match: "81422713435543276343221" 
+     * 
+     * @param Todo found in the database
+     * @param request
+     * 
+     * @return null: Preconditions met.
+     * @return ResponseBuilder: Preconditions not met.
+     */
+    private ResponseBuilder validateConditionalGet(Todo item, Request request) {
+        
+        EntityTag eTag = new EntityTag(Integer.toString(item.hashCode()));
+
+        try {
+
+            //verify request contains an If-None-Match header with a valid ETAG
+            ResponseBuilder builder = request.evaluatePreconditions(eTag);
+            if (builder != null) {
+                //304, Found valid ETag, Resource has not changed.
+                return builder;
+            }            
+            
+        } catch (HeaderValueException e) {
+            //HeaderValueException: Unable to parse "If-None-Match" header value ...
+            logger.debug(e.getMessage(), e);
+        }
+        
+        return null;
+    }
+    
+    
+    /**
+     * Conditional update
+     * 
+     * Validates if an 'If-Match' header comes in the request, then it's value
+     * must match the value of the eTag of the resource we want to update. This
+     * will assure we are not working with stale data.
+     * 
+     * Example Request: 
+     * PUT /v1/todo HTTP/1.1
+     * If-Match: "81422713435543276343221"
+     * 
+     * @param Todo found in the database
+     * @param request
+     * 
+     * @return null: Preconditions met.
+     * @return ResponseBuilder: Preconditions not met.
+     */
+    private ResponseBuilder validateConditionalUpdate(Todo item, Request request) {
+        
+        //get the ETag of the resource we want to update.
+        EntityTag updateETag = new EntityTag(Integer.toString(item.hashCode()));
+
+        try {
+            
+            //verify if request contains an If-Match header with with an eTag value,
+            //and that it matches the value of 'updateEtag'
+             ResponseBuilder builder = request.evaluatePreconditions(updateETag);
+             
+            if (builder != null) {
+                // Preconditions not met! (ETag and If-Match)
+                // The updateETag doesn't match the eTag sent in the If-Match Header
+                return builder; //412 Precondition Failed
+            }
+             
+            
+        } catch (HeaderValueException e) {
+            //For some reason, if etag doesn't exist it throws a 
+            //HeaderValueException: Unable to parse "If-Match" header value ...
+            logger.debug(e.getMessage(), e);
+            return Response.status(Response.Status.PRECONDITION_FAILED);
+        }
+        
+        
+        return null; //Preconditions met
+    }
+    
     //spring DI
     public void setTodoService(TodoService todoService) {
         this.todoService = todoService;
-    }
+    }    
 }

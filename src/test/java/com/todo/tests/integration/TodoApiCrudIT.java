@@ -85,7 +85,7 @@ public class TodoApiCrudIT extends RestOperations {
         testBadRequest();
         
         //tests with ETag
-        testConditionalGet();        
+        testConditionalGetUpdate();        
     }
 
     private void testBadRequest() {
@@ -171,7 +171,7 @@ public class TodoApiCrudIT extends RestOperations {
 
     }
 
-    private void testConditionalGet() {
+    private void testConditionalGetUpdate() {
         
         //create a new resource;
         Todo item = new Todo("test GET with an ETag");
@@ -182,20 +182,44 @@ public class TodoApiCrudIT extends RestOperations {
         String url = postResponse.getLocation().toString();
         Response response = get(url);
         Assert.assertEquals(200, response.getStatus());
+        item = response.readEntity(Todo.class); //update the item so it can have the id.
 
         //get it's eTag
-        EntityTag etag = response.getEntityTag();
-        Assert.assertNotNull("GET request should return an eTag", etag);
+        EntityTag getETag = response.getEntityTag();
+        Assert.assertNotNull("GET request should return an eTag", getETag);
 
-        //ask for a Conditional resource with an eTag
+        //test Conditional GET resource with a valid eTag
         Map<String, String> headers = new HashMap<String, String>();
-        headers.put("If-None-Match", etag.toString());
+        headers.put("If-None-Match", getETag.toString());
         response = get(url, headers);
         Assert.assertEquals(304, response.getStatus());
-        
+
         //if the resource hasn't changed, no data should be returned
         Object contentLength = response.getHeaders().getFirst("Content-Length");
         Assert.assertTrue("304 should have no Content-Length", (contentLength == null || contentLength.equals("0")) );
+        
+        //test Conditional GET resource with an valid eTag
+        headers = new HashMap<String, String>();
+        headers.put("If-None-Match", "junk");
+        response = get(url, headers);
+        Assert.assertEquals(200, response.getStatus());
+
+        //test sending a Conditional PUT, with an invalid eTag    
+        item.setTitle("test Update with an ETag");
+
+        headers = new HashMap<String, String>();
+        headers.put("If-Match", "junk");
+        
+        response = update(item, headers);
+        Assert.assertEquals(412, response.getStatus()); //412 Precondition Failed
+        
+        //test sending a Conditional PUT, with a valid eTag    
+        item.setTitle("test Update with an ETag");
+
+        headers = new HashMap<String, String>();
+        headers.put("If-Match", getETag.toString());
+        response = update(item, headers);
+        Assert.assertEquals(200, response.getStatus()); 
         
         response.close();
     }

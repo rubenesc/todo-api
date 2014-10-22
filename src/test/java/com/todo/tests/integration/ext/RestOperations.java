@@ -82,7 +82,6 @@ public class RestOperations {
         
         if (headers != null){
             for (Map.Entry<String, String> entry : headers.entrySet()) {
-                String key = entry.getKey();
                 request.header(entry.getKey(), entry.getValue());
             }
         }
@@ -109,18 +108,30 @@ public class RestOperations {
     
     
     //UPDATE
+    
     public Response update(Todo item) {
+
+        return update(item, null);
+    }
+    
+    public Response update(Todo item, Map<String, String> headers) {
 
         WebTarget webTarget = client.target(TODO_API_URL + "/" + item.getId());
 
         Invocation.Builder request = webTarget.request();
         request.header(CONTENT_TYPE, MediaType.APPLICATION_JSON);
-
+        
+        if (headers != null){
+            for (Map.Entry<String, String> entry : headers.entrySet()) {
+                request.header(entry.getKey(), entry.getValue());
+            }
+        }
+        
         Response response = request.put(Entity.entity(item, MediaType.APPLICATION_JSON));
-        return response;
+        return response;   
     }
     
-    
+        
     /**
      * Partial update with PATCH method. Used Apache httpClient instead of
      * jersey, due to lack of support of PATCH method.
