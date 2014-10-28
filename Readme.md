@@ -57,7 +57,8 @@ Run Integration tests aimed at the CRUD operations of the Rest API
 
 #### Installation
 ```bash
-  $ git https://github.com/rubenesc/todo-api.git
+  $ git clone https://github.com/rubenesc/todo-api.git
+  $ cd todo-api
   (configure ./src/main/resources/spring/config.properties)
   (configure ./src/test/resources/config.properties)
   $ mvn clean package
