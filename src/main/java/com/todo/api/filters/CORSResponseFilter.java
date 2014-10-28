@@ -10,7 +10,7 @@ import javax.ws.rs.core.MultivaluedMap;
 public class CORSResponseFilter
         implements ContainerResponseFilter {
 
-    public static final String ALLOWED_METHODS = "GET, POST, DELETE, PUT, PATCH";
+    public static final String ALLOWED_METHODS = "GET, POST, DELETE, PUT, PATCH, HEAD";
 
     public void filter(ContainerRequestContext requestContext, ContainerResponseContext responseContext)
             throws IOException {

@@ -39,9 +39,12 @@ public class SmsService {
     @PostConstruct
     public void initialize() {
 
-        if (client == null) {
-            client = new TwilioRestClient(accountSid, authToken);
+        if (isEnabled()) {
+            if (client == null) {
+                client = new TwilioRestClient(accountSid, authToken);
+            }
         }
+
     }
 
     @Async
@@ -54,7 +57,7 @@ public class SmsService {
     public void send(String to, String body) throws TwilioRestException, ValidationException {
         send(to, defaultFrom, body);
     }
-    
+
     public void send(String to, String from, String body) throws ValidationException, TwilioRestException {
 
         if (isEnabled()) {
@@ -113,5 +116,4 @@ public class SmsService {
     public void setEnabled(boolean enabled) {
         this.enabled = enabled;
     }
-    
 }
