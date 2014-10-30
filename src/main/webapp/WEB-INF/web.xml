@@ -17,10 +17,6 @@
     </context-param>
     
     <context-param>  
-        <param-name>spring.profiles.active</param-name>  
-        <param-value>dev</param-value>  
-    </context-param>  
-    <context-param>  
         <param-name>spring.profiles.default</param-name>  
         <param-value>dev</param-value>  
     </context-param>
@@ -36,7 +32,7 @@
         </servlet-class>
         <init-param>
             <param-name>javax.ws.rs.Application</param-name>
-            <param-value>com.todo.api.TodoApiApp</param-value>
+            <param-value>com.todo.api.config.JerseyConfig</param-value>
         </init-param>		
         <load-on-startup>1</load-on-startup>
     </servlet>

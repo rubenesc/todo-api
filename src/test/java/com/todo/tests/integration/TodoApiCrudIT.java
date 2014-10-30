@@ -26,6 +26,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
@@ -34,7 +35,8 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
  * @author ruben
  */
 @RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration({"classpath:test-applicationContext.xml"})
+@ActiveProfiles("test")
+@ContextConfiguration("file:src/main/resources/spring/applicationContext.xml")
 public class TodoApiCrudIT extends RestOperations {
 
     final static org.slf4j.Logger logger = LoggerFactory.getLogger(TodoApiCrudIT.class);
