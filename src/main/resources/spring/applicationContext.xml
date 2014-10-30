@@ -23,9 +23,6 @@
     <!-- Component Scan Packages for Annotation Driven Configuration -->
     <context:component-scan base-package="com.todo.api.*" />
 
-    <!-- Configurer that replaces ${...} placeholders with values from a properties file -->
-    <context:property-placeholder location="classpath:config.properties"/>
-
     <!--start Mongo DB--> 
     <bean id="userCredentials" class="org.springframework.data.authentication.UserCredentials">
         <constructor-arg name="username" value="${db.username}" />
@@ -69,5 +66,16 @@
         <property name="defaultTo" value="${twilio.defaultTo}"/> 
         <property name="defaultFrom" value="${twilio.defaultFrom}"/> 
     </bean>       
+
+        
+    <beans profile="dev">
+        <context:property-placeholder location="classpath:spring/config-dev.properties"/>
+    </beans>    
+    <beans profile="test">
+        <context:property-placeholder location="classpath:spring/config-test.properties"/>
+    </beans>    
+    <beans profile="prod">
+        <context:property-placeholder location="classpath:spring/config-prod.properties"/>
+    </beans>    
     
 </beans>
