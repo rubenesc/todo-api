@@ -2,7 +2,7 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package com.todo.api.resource.ext;
+package com.todo.api.resources.ext;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

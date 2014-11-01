@@ -2,11 +2,11 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package com.todo.api.resource;
+package com.todo.api.resources;
 
 import com.todo.api.domain.ListOptions;
 import com.todo.api.domain.ListWrapper;
-import com.todo.api.resource.ext.PATCH;
+import com.todo.api.resources.ext.PATCH;
 import com.todo.api.domain.Todo;
 import com.todo.api.filters.AppConst;
 import com.todo.api.helpers.TodoHelper;
@@ -39,6 +39,7 @@ import org.springframework.beans.factory.annotation.Autowired;
  * @author ruben
  */
 @Path("/v1/todo")
+@Produces(AppConst.CONTENT_TYPE_JSON_UTF_8)
 public class TodoResource {
     
     final static Logger logger = LoggerFactory.getLogger(TodoResource.class);

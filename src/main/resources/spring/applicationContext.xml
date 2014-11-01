@@ -45,7 +45,7 @@
 	<constructor-arg name="mongoOps" ref="mongoTemplate"/>
     </bean>
 
-    <bean id="todoResource" class="com.todo.api.resource.TodoResource" >
+    <bean id="todoResource" class="com.todo.api.resources.TodoResource" >
     	<property name="todoService" ref="todoService"/>
     </bean>
         
